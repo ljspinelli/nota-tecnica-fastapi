@@ -5,7 +5,7 @@ Base.metadata.create_all(bind=engine)
 
 from fastapi import FastAPI
 from datetime import datetime
-from .models import Estagiario
+from .models import Estagiario, Ciclo, NotaTecnica
 from .services import calcular_periodos_recesso, montar_texto_conclusao
 
 app = FastAPI(title="Serviço de Nota Técnica – Estagiário")
@@ -27,3 +27,4 @@ def gerar_nota_tecnica(estagiario: Estagiario):
         texto_conclusao=texto_conclusao,
 
     )
+
