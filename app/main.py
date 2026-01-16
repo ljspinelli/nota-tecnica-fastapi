@@ -91,13 +91,14 @@ def gerar_nota_tecnica(estagiario: EstagiarioSchema):
         total_dias_nao_gozados=total_dias_nao_gozados,
         texto_conclusao=texto_conclusao,
     )
+from sqlalchemy import text
 from .database import SessionLocal
 
 @app.get("/testar-banco")
 def testar_banco():
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")  # comando simples só para abrir o banco
+        db.execute(text("SELECT 1"))  # agora usando text() corretamente
         db.close()
         return {"status": "ok", "mensagem": "Banco SQLite acessado com sucesso!"}
     except Exception as e:
