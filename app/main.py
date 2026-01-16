@@ -1,3 +1,8 @@
+from .database import Base, engine
+from . import models
+
+Base.metadata.create_all(bind=engine)
+
 from fastapi import FastAPI
 from datetime import datetime
 from .models import Estagiario, NotaTecnicaResponse

@@ -1,35 +1,42 @@
-from pydantic import BaseModel
-from datetime import date
-from typing import List
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from sqlalchemy.orm import relationship
+from .database import Base
+
+class Estagiario(Base):
+    __tablename__ = "estagiarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String)
+    ocupacao = Column(String)
+    matricula = Column(String)
+    processo_pae = Column(String)
+    data_inicio_contrato = Column(Date)
+    data_fim_contrato = Column(Date)
+
+    ciclos = relationship("Ciclo", back_populates="estagiario")
+    notas = relationship("NotaTecnica", back_populates="estagiario")
 
 
-class Ciclo(BaseModel):
-    data_inicio: date
-    data_fim: date
-    dias_gozados: int = 0
+class Ciclo(Base):
+    __tablename__ = "ciclos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    estagiario_id = Column(Integer, ForeignKey("estagiarios.id"))
+    data_inicio = Column(Date)
+    data_fim = Column(Date)
+    dias_gozados = Column(Integer)
+
+    estagiario = relationship("Estagiario", back_populates="ciclos")
 
 
-class Estagiario(BaseModel):
-    nome: str
-    ocupacao: str
-    matricula: str
-    processo_pae: str
-    data_inicio_contrato: date
-    data_fim_contrato: date
-    ciclos: List[Ciclo]
+class NotaTecnica(Base):
+    __tablename__ = "notas_tecnicas"
 
+    id = Column(Integer, primary_key=True, index=True)
+    estagiario_id = Column(Integer, ForeignKey("estagiarios.id"))
+    numero_nota = Column(String)
+    total_dias_nao_gozados = Column(Integer)
+    texto_conclusao = Column(String)
+    data_emissao = Column(Date)
 
-class PeriodoRecesso(BaseModel):
-    periodo_aquisitivo_inicio: date
-    periodo_aquisitivo_fim: date
-    dias_direito: int
-    dias_gozados: int
-    dias_nao_gozados: int
-
-
-class NotaTecnicaResponse(BaseModel):
-    numero_nota: str
-    estagiario: Estagiario
-    periodos_recesso: List[PeriodoRecesso]
-    total_dias_nao_gozados: int
-    texto_conclusao: str
+    estagiario = relationship("Estagiario", back_populates="notas")
