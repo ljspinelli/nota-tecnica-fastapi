@@ -27,5 +27,3 @@ def gerar_nota_tecnica(estagiario: Estagiario):
         texto_conclusao=texto_conclusao,
 
     )
-
-
