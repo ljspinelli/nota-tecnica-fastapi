@@ -1,6 +1,6 @@
 from datetime import date
 from typing import List
-from .models import Estagiario, PeriodoRecesso
+from .models import Estagiario, Ciclo
 
 
 def calcular_meses_entre(inicio: date, fim: date) -> int:
@@ -51,4 +51,5 @@ def montar_texto_conclusao(estagiario: Estagiario, periodos: List[PeriodoRecesso
     return (
         f"Conclui-se que o(a) ex-estagiário(a) {estagiario.nome} faz jus ao recebimento "
         f"dos dias de recesso não gozados referentes aos períodos: {corpo}."
+
     )
