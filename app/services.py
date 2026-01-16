@@ -20,7 +20,7 @@ def obter_dias_recesso_por_meses(meses: int) -> int:
     return 30
 
 
-def calcular_periodos_recesso(estagiario: Estagiario) -> List[PeriodoRecesso]:
+def calcular_periodos_recesso(estagiario: Estagiario):
     periodos: List[PeriodoRecesso] = []
 
     for ciclo in estagiario.ciclos:
@@ -53,3 +53,4 @@ def montar_texto_conclusao(estagiario: Estagiario, periodos: List[PeriodoRecesso
         f"dos dias de recesso não gozados referentes aos períodos: {corpo}."
 
     )
+
