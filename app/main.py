@@ -314,4 +314,6 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
             "estagiario": est,
             "periodos": periodos,
             "texto_conclusao": nota.texto_conclusao,
-           
+            "data_emissao": nota.data_emissao.strftime("%d/%m/%Y")
+        }
+    )
