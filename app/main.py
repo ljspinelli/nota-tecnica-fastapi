@@ -103,3 +103,43 @@ def testar_banco():
         return {"status": "ok", "mensagem": "Banco SQLite acessado com sucesso!"}
     except Exception as e:
         return {"status": "erro", "detalhes": str(e)}
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from .database import SessionLocal
+from .models import Estagiario, Ciclo
+
+# Dependência para obter a sessão do banco
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.post("/estagiario")
+def criar_estagiario(estagiario: EstagiarioSchema, db: Session = Depends(get_db)):
+    novo_estagiario = Estagiario(
+        nome=estagiario.nome,
+        ocupacao=estagiario.ocupacao,
+        matricula=estagiario.matricula,
+        processo_pae=estagiario.processo_pae,
+        data_inicio_contrato=estagiario.data_inicio_contrato,
+        data_fim_contrato=estagiario.data_fim_contrato,
+    )
+    db.add(novo_estagiario)
+    db.commit()
+    db.refresh(novo_estagiario)
+
+    for ciclo in estagiario.ciclos:
+        novo_ciclo = Ciclo(
+            estagiario_id=novo_estagiario.id,
+            data_inicio=ciclo.data_inicio,
+            data_fim=ciclo.data_fim,
+            dias_gozados=ciclo.dias_gozados,
+        )
+        db.add(novo_ciclo)
+
+    db.commit()
+
+    return {"status": "ok", "id": novo_estagiario.id}
