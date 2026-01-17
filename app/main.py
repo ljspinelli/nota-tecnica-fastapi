@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from datetime import datetime, date
 from typing import List
 from pydantic import BaseModel
@@ -13,6 +15,9 @@ from .services import calcular_periodos_recesso, montar_texto_conclusao
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Serviço de Nota Técnica – Estagiário")
+
+# Suporte a templates HTML
+templates = Jinja2Templates(directory="app/templates")
 
 
 # ---------------------------------------------------------
@@ -286,3 +291,27 @@ def buscar_nota_tecnica(nota_id: int, db: Session = Depends(get_db)):
         "texto_conclusao": nota.texto_conclusao,
         "data_emissao": nota.data_emissao.strftime("%d/%m/%Y")
     }
+
+
+# ---------------------------------------------------------
+# VISUALIZAR NOTA TÉCNICA EM HTML
+# ---------------------------------------------------------
+@app.get("/nota-tecnica/{nota_id}/visualizar", response_class=HTMLResponse)
+def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depends(get_db)):
+    nota = db.query(NotaTecnica).filter(NotaTecnica.id == nota_id).first()
+    if not nota:
+        raise HTTPException(status_code=404, detail="Nota Técnica não encontrada")
+
+    est = db.query(Estagiario).filter(Estagiario.id == nota.estagiario_id).first()
+
+    periodos = calcular_periodos_recesso(est)
+
+    return templates.TemplateResponse(
+        "nota_tecnica.html",
+        {
+            "request": request,
+            "numero_nota": nota.numero_nota,
+            "estagiario": est,
+            "periodos": periodos,
+            "texto_conclusao": nota.texto_conclusao,
+           
