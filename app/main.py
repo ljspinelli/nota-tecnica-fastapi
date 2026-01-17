@@ -1,3 +1,7 @@
+from datetime import datetime
+
+def parse_data_br(data_str: str):
+    return datetime.strptime(data_str, "%d/%m/%Y").date()
 from .database import Base, engine
 from . import models
 
@@ -189,3 +193,4 @@ def gerar_nota_tecnica_por_id(estagiario_id: int, db: Session = Depends(get_db))
         total_dias_nao_gozados=total_dias_nao_gozados,
         texto_conclusao=texto_conclusao
     )
+
