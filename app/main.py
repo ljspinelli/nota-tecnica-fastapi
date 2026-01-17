@@ -143,3 +143,49 @@ def criar_estagiario(estagiario: EstagiarioSchema, db: Session = Depends(get_db)
     db.commit()
 
     return {"status": "ok", "id": novo_estagiario.id}
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from .models import Estagiario, Ciclo, NotaTecnica
+from datetime import date
+
+@app.post("/nota-tecnica/{estagiario_id}", response_model=NotaTecnicaResponse)
+def gerar_nota_tecnica_por_id(estagiario_id: int, db: Session = Depends(get_db)):
+    # Buscar estagiário no banco
+    est = db.query(Estagiario).filter(Estagiario.id == estagiario_id).first()
+
+    if not est:
+        raise HTTPException(status_code=404, detail="Estagiário não encontrado")
+
+    # Carregar ciclos
+    ciclos = db.query(Ciclo).filter(Ciclo.estagiario_id == estagiario_id).all()
+    est.ciclos = ciclos
+
+    # Calcular períodos
+    periodos = calcular_periodos_recesso(est)
+
+    total_dias_nao_gozados = sum(p["dias_nao_gozados"] for p in periodos)
+
+    numero_nota = f"{estagiario_id:03d}/{datetime.now().year}"
+
+    texto_conclusao = montar_texto_conclusao(est, periodos)
+
+    # Salvar nota no banco
+    nova_nota = NotaTecnica(
+        estagiario_id=estagiario_id,
+        numero_nota=numero_nota,
+        total_dias_nao_gozados=total_dias_nao_gozados,
+        texto_conclusao=texto_conclusao,
+        data_emissao=date.today()
+    )
+
+    db.add(nova_nota)
+    db.commit()
+    db.refresh(nova_nota)
+
+    return NotaTecnicaResponse(
+        numero_nota=numero_nota,
+        estagiario=est,
+        periodos_recesso=periodos,
+        total_dias_nao_gozados=total_dias_nao_gozados,
+        texto_conclusao=texto_conclusao
+    )
