@@ -58,6 +58,17 @@ class NotaTecnicaResponse(BaseModel):
 
 
 # ---------------------------------------------------------
+# NOVO SCHEMA PARA LISTAR NOTAS
+# ---------------------------------------------------------
+class NotaTecnicaListaSchema(BaseModel):
+    id: int
+    numero_nota: str
+    estagiario: str
+    total_dias_nao_gozados: int
+    data_emissao: date
+
+
+# ---------------------------------------------------------
 # Dependência de banco
 # ---------------------------------------------------------
 def get_db():
@@ -180,3 +191,26 @@ def gerar_nota_tecnica_por_id(estagiario_id: int, db: Session = Depends(get_db))
         texto_conclusao=texto_conclusao,
     )
 
+
+# ---------------------------------------------------------
+# Listar todas as notas técnicas
+# ---------------------------------------------------------
+@app.get("/notas-tecnicas", response_model=List[NotaTecnicaListaSchema])
+def listar_notas_tecnicas(db: Session = Depends(get_db)):
+    notas = db.query(NotaTecnica).all()
+
+    resposta = []
+    for nota in notas:
+        est = db.query(Estagiario).filter(Estagiario.id == nota.estagiario_id).first()
+
+        resposta.append(
+            NotaTecnicaListaSchema(
+                id=nota.id,
+                numero_nota=nota.numero_nota,
+                estagiario=est.nome if est else "Desconhecido",
+                total_dias_nao_gozados=nota.total_dias_nao_gozados,
+                data_emissao=nota.data_emissao
+            )
+        )
+
+    return resposta
