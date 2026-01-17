@@ -1,26 +1,33 @@
-from datetime import datetime
-
-def parse_data_br(data_str: str):
-    return datetime.strptime(data_str, "%d/%m/%Y").date()
-from .database import Base, engine
-from . import models
-
-Base.metadata.create_all(bind=engine)
-
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from datetime import datetime, date
 from typing import List
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from .database import Base, engine, SessionLocal
+from .models import Estagiario, Ciclo, NotaTecnica
 from .services import calcular_periodos_recesso, montar_texto_conclusao
+
+# Criar tabelas no banco
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Serviço de Nota Técnica – Estagiário")
 
 
-# --------- SCHEMAS (Pydantic) ---------
+# ---------------------------------------------------------
+# Função para converter datas no formato brasileiro
+# ---------------------------------------------------------
+def parse_data_br(data_str: str):
+    return datetime.strptime(data_str, "%d/%m/%Y").date()
 
+
+# ---------------------------------------------------------
+# SCHEMAS (aceitando datas como string BR)
+# ---------------------------------------------------------
 class CicloSchema(BaseModel):
-    data_inicio: date
-    data_fim: date
+    data_inicio: str
+    data_fim: str
     dias_gozados: int
 
 
@@ -29,8 +36,8 @@ class EstagiarioSchema(BaseModel):
     ocupacao: str
     matricula: str
     processo_pae: str
-    data_inicio_contrato: date
-    data_fim_contrato: date
+    data_inicio_contrato: str
+    data_fim_contrato: str
     ciclos: List[CicloSchema]
 
 
@@ -50,70 +57,9 @@ class NotaTecnicaResponse(BaseModel):
     texto_conclusao: str
 
 
-# --------- ENDPOINT ---------
-
-@app.post("/nota-tecnica", response_model=NotaTecnicaResponse)
-def gerar_nota_tecnica(estagiario: EstagiarioSchema):
-    # Converte ciclos do schema para objetos Ciclo (SQLAlchemy-like) apenas para cálculo
-    ciclos_convertidos = []
-    for c in estagiario.ciclos:
-        ciclos_convertidos.append(
-            models.Ciclo(
-                data_inicio=c.data_inicio,
-                data_fim=c.data_fim,
-                dias_gozados=c.dias_gozados,
-            )
-        )
-
-    # Cria um "Estagiario" em memória só para passar para as funções de serviço
-    estagiario_obj = models.Estagiario(
-        nome=estagiario.nome,
-        ocupacao=estagiario.ocupacao,
-        matricula=estagiario.matricula,
-        processo_pae=estagiario.processo_pae,
-        data_inicio_contrato=estagiario.data_inicio_contrato,
-        data_fim_contrato=estagiario.data_fim_contrato,
-    )
-    estagiario_obj.ciclos = ciclos_convertidos
-
-    # Calcula períodos de recesso
-    periodos = calcular_periodos_recesso(estagiario_obj)
-
-    # Soma total de dias não gozados
-    total_dias_nao_gozados = sum(p["dias_nao_gozados"] for p in periodos)
-
-    # Número da nota
-    numero_nota = f"001/{datetime.now().year}"
-
-    # Texto de conclusão
-    texto_conclusao = montar_texto_conclusao(estagiario_obj, periodos)
-
-    return NotaTecnicaResponse(
-        numero_nota=numero_nota,
-        estagiario=estagiario,
-        periodos_recesso=periodos,
-        total_dias_nao_gozados=total_dias_nao_gozados,
-        texto_conclusao=texto_conclusao,
-    )
-from sqlalchemy import text
-from .database import SessionLocal
-
-@app.get("/testar-banco")
-def testar_banco():
-    try:
-        db = SessionLocal()
-        db.execute(text("SELECT 1"))  # agora usando text() corretamente
-        db.close()
-        return {"status": "ok", "mensagem": "Banco SQLite acessado com sucesso!"}
-    except Exception as e:
-        return {"status": "erro", "detalhes": str(e)}
-
-from fastapi import Depends
-from sqlalchemy.orm import Session
-from .database import SessionLocal
-from .models import Estagiario, Ciclo
-
-# Dependência para obter a sessão do banco
+# ---------------------------------------------------------
+# Dependência de banco
+# ---------------------------------------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -121,6 +67,24 @@ def get_db():
     finally:
         db.close()
 
+
+# ---------------------------------------------------------
+# Endpoint de teste do banco
+# ---------------------------------------------------------
+@app.get("/testar-banco")
+def testar_banco():
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        return {"status": "ok", "mensagem": "Banco SQLite acessado com sucesso!"}
+    except Exception as e:
+        return {"status": "erro", "detalhes": str(e)}
+
+
+# ---------------------------------------------------------
+# Criar estagiário
+# ---------------------------------------------------------
 @app.post("/estagiario")
 def criar_estagiario(estagiario: EstagiarioSchema, db: Session = Depends(get_db)):
     novo_estagiario = Estagiario(
@@ -128,9 +92,10 @@ def criar_estagiario(estagiario: EstagiarioSchema, db: Session = Depends(get_db)
         ocupacao=estagiario.ocupacao,
         matricula=estagiario.matricula,
         processo_pae=estagiario.processo_pae,
-        data_inicio_contrato=estagiario.data_inicio_contrato,
-        data_fim_contrato=estagiario.data_fim_contrato,
+        data_inicio_contrato=parse_data_br(estagiario.data_inicio_contrato),
+        data_fim_contrato=parse_data_br(estagiario.data_fim_contrato),
     )
+
     db.add(novo_estagiario)
     db.commit()
     db.refresh(novo_estagiario)
@@ -138,8 +103,8 @@ def criar_estagiario(estagiario: EstagiarioSchema, db: Session = Depends(get_db)
     for ciclo in estagiario.ciclos:
         novo_ciclo = Ciclo(
             estagiario_id=novo_estagiario.id,
-            data_inicio=ciclo.data_inicio,
-            data_fim=ciclo.data_fim,
+            data_inicio=parse_data_br(ciclo.data_inicio),
+            data_fim=parse_data_br(ciclo.data_fim),
             dias_gozados=ciclo.dias_gozados,
         )
         db.add(novo_ciclo)
@@ -147,50 +112,71 @@ def criar_estagiario(estagiario: EstagiarioSchema, db: Session = Depends(get_db)
     db.commit()
 
     return {"status": "ok", "id": novo_estagiario.id}
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from .models import Estagiario, Ciclo, NotaTecnica
-from datetime import date
 
+
+# ---------------------------------------------------------
+# Gerar Nota Técnica por ID
+# ---------------------------------------------------------
 @app.post("/nota-tecnica/{estagiario_id}", response_model=NotaTecnicaResponse)
 def gerar_nota_tecnica_por_id(estagiario_id: int, db: Session = Depends(get_db)):
-    # Buscar estagiário no banco
     est = db.query(Estagiario).filter(Estagiario.id == estagiario_id).first()
-
     if not est:
         raise HTTPException(status_code=404, detail="Estagiário não encontrado")
 
-    # Carregar ciclos
     ciclos = db.query(Ciclo).filter(Ciclo.estagiario_id == estagiario_id).all()
     est.ciclos = ciclos
 
-    # Calcular períodos
     periodos = calcular_periodos_recesso(est)
-
     total_dias_nao_gozados = sum(p["dias_nao_gozados"] for p in periodos)
 
     numero_nota = f"{estagiario_id:03d}/{datetime.now().year}"
-
     texto_conclusao = montar_texto_conclusao(est, periodos)
 
-    # Salvar nota no banco
     nova_nota = NotaTecnica(
         estagiario_id=estagiario_id,
         numero_nota=numero_nota,
         total_dias_nao_gozados=total_dias_nao_gozados,
         texto_conclusao=texto_conclusao,
-        data_emissao=date.today()
+        data_emissao=date.today(),
     )
 
     db.add(nova_nota)
     db.commit()
     db.refresh(nova_nota)
 
+    est_schema = EstagiarioSchema(
+        nome=est.nome,
+        ocupacao=est.ocupacao,
+        matricula=est.matricula,
+        processo_pae=est.processo_pae,
+        data_inicio_contrato=est.data_inicio_contrato.strftime("%d/%m/%Y"),
+        data_fim_contrato=est.data_fim_contrato.strftime("%d/%m/%Y"),
+        ciclos=[
+            CicloSchema(
+                data_inicio=c.data_inicio.strftime("%d/%m/%Y"),
+                data_fim=c.data_fim.strftime("%d/%m/%Y"),
+                dias_gozados=c.dias_gozados,
+            )
+            for c in ciclos
+        ],
+    )
+
+    periodos_schema = [
+        PeriodoRecessoSchema(
+            periodo_aquisitivo_inicio=p["periodo_aquisitivo_inicio"],
+            periodo_aquisitivo_fim=p["periodo_aquisitivo_fim"],
+            dias_direito=p["dias_direito"],
+            dias_gozados=p["dias_gozados"],
+            dias_nao_gozados=p["dias_nao_gozados"],
+        )
+        for p in periodos
+    ]
+
     return NotaTecnicaResponse(
         numero_nota=numero_nota,
-        estagiario=est,
-        periodos_recesso=periodos,
+        estagiario=est_schema,
+        periodos_recesso=periodos_schema,
         total_dias_nao_gozados=total_dias_nao_gozados,
-        texto_conclusao=texto_conclusao
+        texto_conclusao=texto_conclusao,
     )
 
