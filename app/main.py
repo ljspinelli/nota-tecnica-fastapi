@@ -57,9 +57,6 @@ class NotaTecnicaResponse(BaseModel):
     texto_conclusao: str
 
 
-# ---------------------------------------------------------
-# NOVO SCHEMA PARA LISTAR NOTAS
-# ---------------------------------------------------------
 class NotaTecnicaListaSchema(BaseModel):
     id: int
     numero_nota: str
@@ -214,3 +211,78 @@ def listar_notas_tecnicas(db: Session = Depends(get_db)):
         )
 
     return resposta
+
+
+# ---------------------------------------------------------
+# Listar todos os estagiários
+# ---------------------------------------------------------
+@app.get("/estagiarios")
+def listar_estagiarios(db: Session = Depends(get_db)):
+    estagiarios = db.query(Estagiario).all()
+
+    resposta = []
+    for est in estagiarios:
+        resposta.append({
+            "id": est.id,
+            "nome": est.nome,
+            "ocupacao": est.ocupacao,
+            "matricula": est.matricula,
+            "processo_pae": est.processo_pae,
+            "data_inicio_contrato": est.data_inicio_contrato.strftime("%d/%m/%Y"),
+            "data_fim_contrato": est.data_fim_contrato.strftime("%d/%m/%Y")
+        })
+
+    return resposta
+
+
+# ---------------------------------------------------------
+# Buscar estagiário por ID
+# ---------------------------------------------------------
+@app.get("/estagiario/{estagiario_id}")
+def buscar_estagiario(estagiario_id: int, db: Session = Depends(get_db)):
+    est = db.query(Estagiario).filter(Estagiario.id == estagiario_id).first()
+
+    if not est:
+        raise HTTPException(status_code=404, detail="Estagiário não encontrado")
+
+    ciclos = db.query(Ciclo).filter(Ciclo.estagiario_id == estagiario_id).all()
+
+    return {
+        "id": est.id,
+        "nome": est.nome,
+        "ocupacao": est.ocupacao,
+        "matricula": est.matricula,
+        "processo_pae": est.processo_pae,
+        "data_inicio_contrato": est.data_inicio_contrato.strftime("%d/%m/%Y"),
+        "data_fim_contrato": est.data_fim_contrato.strftime("%d/%m/%Y"),
+        "ciclos": [
+            {
+                "data_inicio": c.data_inicio.strftime("%d/%m/%Y"),
+                "data_fim": c.data_fim.strftime("%d/%m/%Y"),
+                "dias_gozados": c.dias_gozados
+            }
+            for c in ciclos
+        ]
+    }
+
+
+# ---------------------------------------------------------
+# Buscar nota técnica por ID
+# ---------------------------------------------------------
+@app.get("/nota-tecnica/{nota_id}")
+def buscar_nota_tecnica(nota_id: int, db: Session = Depends(get_db)):
+    nota = db.query(NotaTecnica).filter(NotaTecnica.id == nota_id).first()
+
+    if not nota:
+        raise HTTPException(status_code=404, detail="Nota Técnica não encontrada")
+
+    est = db.query(Estagiario).filter(Estagiario.id == nota.estagiario_id).first()
+
+    return {
+        "id": nota.id,
+        "numero_nota": nota.numero_nota,
+        "estagiario": est.nome if est else "Desconhecido",
+        "total_dias_nao_gozados": nota.total_dias_nao_gozados,
+        "texto_conclusao": nota.texto_conclusao,
+        "data_emissao": nota.data_emissao.strftime("%d/%m/%Y")
+    }
