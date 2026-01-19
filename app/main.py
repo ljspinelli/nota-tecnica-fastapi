@@ -303,21 +303,44 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
         raise HTTPException(status_code=404, detail="Nota Técnica não encontrada")
 
     est = db.query(Estagiario).filter(Estagiario.id == nota.estagiario_id).first()
+    if not est:
+        raise HTTPException(status_code=404, detail="Estagiário não encontrado")
 
-    # 🔥 ADICIONE ESTA PARTE
+    # 🔧 Carregar ciclos do estagiário
     ciclos = db.query(Ciclo).filter(Ciclo.estagiario_id == est.id).all()
     est.ciclos = ciclos
-    # 🔥 SEM ISSO, O SISTEMA QUEBRA
 
+    # 🔧 Calcular períodos de recesso
     periodos = calcular_periodos_recesso(est)
+
+    # 🔧 Preparar estagiário como dicionário com datas formatadas
+    est_dict = {
+        "nome": est.nome,
+        "ocupacao": est.ocupacao,
+        "matricula": est.matricula,
+        "processo_pae": est.processo_pae,
+        "data_inicio_contrato": est.data_inicio_contrato.strftime("%d/%m/%Y"),
+        "data_fim_contrato": est.data_fim_contrato.strftime("%d/%m/%Y")
+    }
+
+    # 🔧 Formatar datas dos períodos para o template
+    periodos_formatados = []
+    for p in periodos:
+        periodos_formatados.append({
+            "periodo_aquisitivo_inicio": p["periodo_aquisitivo_inicio"].strftime("%d/%m/%Y"),
+            "periodo_aquisitivo_fim": p["periodo_aquisitivo_fim"].strftime("%d/%m/%Y"),
+            "dias_direito": p["dias_direito"],
+            "dias_gozados": p["dias_gozados"],
+            "dias_nao_gozados": p["dias_nao_gozados"]
+        })
 
     return templates.TemplateResponse(
         "nota_tecnica.html",
         {
             "request": request,
             "numero_nota": nota.numero_nota,
-            "estagiario": est,
-            "periodos": periodos,
+            "estagiario": est_dict,
+            "periodos": periodos_formatados,
             "texto_conclusao": nota.texto_conclusao,
             "data_emissao": nota.data_emissao.strftime("%d/%m/%Y")
         }
