@@ -304,6 +304,11 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
 
     est = db.query(Estagiario).filter(Estagiario.id == nota.estagiario_id).first()
 
+    # 🔥 ADICIONE ESTA PARTE
+    ciclos = db.query(Ciclo).filter(Ciclo.estagiario_id == est.id).all()
+    est.ciclos = ciclos
+    # 🔥 SEM ISSO, O SISTEMA QUEBRA
+
     periodos = calcular_periodos_recesso(est)
 
     return templates.TemplateResponse(
@@ -317,3 +322,4 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
             "data_emissao": nota.data_emissao.strftime("%d/%m/%Y")
         }
     )
+
