@@ -298,22 +298,24 @@ def buscar_nota_tecnica(nota_id: int, db: Session = Depends(get_db)):
 # ---------------------------------------------------------
 @app.get("/nota-tecnica/{nota_id}/visualizar", response_class=HTMLResponse)
 def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depends(get_db)):
+    # Buscar a nota técnica
     nota = db.query(NotaTecnica).filter(NotaTecnica.id == nota_id).first()
     if not nota:
         raise HTTPException(status_code=404, detail="Nota Técnica não encontrada")
 
+    # Buscar o estagiário vinculado
     est = db.query(Estagiario).filter(Estagiario.id == nota.estagiario_id).first()
     if not est:
-        raise HTTPException(status_code=404, detail="Estagiário não encontrado")
+        raise HTTPException(status_code=404, detail="Estagiário vinculado à nota não encontrado")
 
-    # 🔧 Carregar ciclos do estagiário
+    # Buscar ciclos do estagiário
     ciclos = db.query(Ciclo).filter(Ciclo.estagiario_id == est.id).all()
     est.ciclos = ciclos
 
-    # 🔧 Calcular períodos de recesso
+    # Calcular períodos de recesso
     periodos = calcular_periodos_recesso(est)
 
-    # 🔧 Preparar estagiário como dicionário com datas formatadas
+    # Converter dados do estagiário para dicionário com datas formatadas
     est_dict = {
         "nome": est.nome,
         "ocupacao": est.ocupacao,
@@ -323,7 +325,7 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
         "data_fim_contrato": est.data_fim_contrato.strftime("%d/%m/%Y")
     }
 
-    # 🔧 Formatar datas dos períodos para o template
+    # Converter períodos para formato amigável ao template
     periodos_formatados = []
     for p in periodos:
         periodos_formatados.append({
@@ -334,6 +336,7 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
             "dias_nao_gozados": p["dias_nao_gozados"]
         })
 
+    # Renderizar o template HTML
     return templates.TemplateResponse(
         "nota_tecnica.html",
         {
@@ -345,4 +348,3 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
             "data_emissao": nota.data_emissao.strftime("%d/%m/%Y")
         }
     )
-
