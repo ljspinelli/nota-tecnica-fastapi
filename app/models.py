@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, Text, DateTime
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -71,3 +71,4 @@ class User(Base):
     senha_hash = Column(String, nullable=False)
 
     ultimo_acesso = Column(DateTime)
+
