@@ -208,3 +208,9 @@ def listar_notas_tecnicas(request: Request, db: Session = Depends(get_db)):
             "notas": notas
         }
     )
+@app.get("/", response_class=HTMLResponse)
+def menu_inicial(request: Request):
+    return templates.TemplateResponse(
+        "menu_inicial.html",
+        {"request": request}
+    )
