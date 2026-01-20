@@ -194,3 +194,17 @@ def listar_estagiarios(request: Request, db: Session = Depends(get_db)):
             "estagiarios": estagiarios
         }
     )
+@app.get("/notas-tecnicas", response_class=HTMLResponse)
+def listar_notas_tecnicas(request: Request, db: Session = Depends(get_db)):
+    notas = (
+        db.query(NotaTecnica)
+        .order_by(NotaTecnica.numero_sequencial.asc())
+        .all()
+    )
+    return templates.TemplateResponse(
+        "lista_notas.html",
+        {
+            "request": request,
+            "notas": notas
+        }
+    )
