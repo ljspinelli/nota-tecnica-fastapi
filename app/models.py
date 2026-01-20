@@ -63,3 +63,11 @@ class NotaTecnica(Base):
     data_emissao = Column(Date, nullable=False)
 
     estagiario = relationship("Estagiario", back_populates="notas")
+class User(Base):
+    __tablename__ = "usuarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False)
+    senha_hash = Column(String, nullable=False)
+
+    ultimo_acesso = Column(DateTime)
