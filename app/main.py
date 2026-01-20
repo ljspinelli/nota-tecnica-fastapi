@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.sessions import SessionMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
 from datetime import datetime, date
 
@@ -269,3 +269,4 @@ def gerar_nota(
     db.commit()
 
     return RedirectResponse(url="/notas-tecnicas", status_code=303)
+
