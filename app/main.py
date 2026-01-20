@@ -1,37 +1,33 @@
-from fastapi import FastAPI, Request, Depends, Form
+from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
-from datetime import date, datetime
+from datetime import datetime, date
 
-from .database import SessionLocal, engine
-from .models import Base, Estagiario, Ciclo, NotaTecnica
+from .database import engine, SessionLocal
+from .models import Base, Estagiario, Ciclo, NotaTecnica, User
 from .services import (
-    calcular_periodos_recesso,
-    montar_texto_conclusao,
     montar_ciclos_a_partir_form,
     calcular_nao_gozados,
     montar_texto_conclusao_vba,
+    verificar_senha
 )
-from fastapi.middleware.sessions import SessionMiddleware
-from fastapi import HTTPException
-from fastapi.responses import RedirectResponse
-from datetime import datetime
-
-from .models import User
-from .services import verificar_senha
 
 # ============================================================
-# CONFIGURAÇÃO INICIAL
+# CONFIGURAÇÃO DO FASTAPI
 # ============================================================
-
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# Sessão com cookies
 app.add_middleware(SessionMiddleware, secret_key="CHAVE-SECRETA-MUITO-FORTE")
 
+# Criar tabelas no banco
+Base.metadata.create_all(bind=engine)
+
+# Templates e arquivos estáticos
 templates = Jinja2Templates(directory="app/templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -49,243 +45,227 @@ def get_db():
 
 
 # ============================================================
-# PÁGINA INICIAL
+# FUNÇÃO DE VERIFICAÇÃO DE LOGIN
+# ============================================================
+
+def usuario_logado(request: Request, db: Session):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Não autorizado")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Não autorizado")
+
+    return user
+
+
+# ============================================================
+# ENDPOINTS DE LOGIN E LOGOUT
+# ============================================================
+
+@app.get("/login", response_class=HTMLResponse)
+def login_form(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.post("/login")
+def login(request: Request, username: str = Form(...), senha: str = Form(...), db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(User.username == username).first()
+
+    if not user or not verificar_senha(senha, user.senha_hash):
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "erro": "Usuário ou senha inválidos"}
+        )
+
+    # Salvar sessão
+    request.session["user_id"] = user.id
+
+    # Registrar data/hora do acesso
+    user.ultimo_acesso = datetime.now()
+    db.commit()
+
+    return RedirectResponse(url="/admin", status_code=303)
+
+
+@app.get("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
+
+
+# ============================================================
+# MENU INICIAL
 # ============================================================
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+def menu_inicial(request: Request):
+    return templates.TemplateResponse("menu_inicial.html", {"request": request})
 
 
 # ============================================================
-# FORMULÁRIO PARA LANÇAMENTO DE DADOS (NOVO)
+# PAINEL ADMINISTRATIVO
 # ============================================================
 
-@app.get("/nota-tecnica/form", response_class=HTMLResponse)
-def form_nota_tecnica(request: Request):
+@app.get("/admin", response_class=HTMLResponse)
+def painel_admin(request: Request, db: Session = Depends(get_db)):
+    usuario_logado(request, db)
+
+    total_estagiarios = db.query(Estagiario).count()
+    total_notas = db.query(NotaTecnica).count()
+
+    total_dias_pagos = sum(
+        [n.total_dias_nao_gozados for n in db.query(NotaTecnica).all()]
+    )
+
+    ultimas_notas = (
+        db.query(NotaTecnica)
+        .order_by(NotaTecnica.id.desc())
+        .limit(5)
+        .all()
+    )
+
     return templates.TemplateResponse(
-        "lancamento_dados.html",
-        {"request": request},
+        "painel_admin.html",
+        {
+            "request": request,
+            "total_estagiarios": total_estagiarios,
+            "total_notas": total_notas,
+            "total_dias_pagos": total_dias_pagos,
+            "ultimas_notas": ultimas_notas,
+        }
     )
 
 
-@app.post("/nota-tecnica/form")
-def criar_nota_tecnica_form(
+# ============================================================
+# LISTAGEM DE ESTAGIÁRIOS
+# ============================================================
+
+@app.get("/estagiarios", response_class=HTMLResponse)
+def listar_estagiarios(request: Request, db: Session = Depends(get_db)):
+    usuario_logado(request, db)
+
+    estagiarios = db.query(Estagiario).all()
+    return templates.TemplateResponse(
+        "lista_estagiarios.html",
+        {"request": request, "estagiarios": estagiarios}
+    )
+
+
+# ============================================================
+# LISTAGEM DE NOTAS TÉCNICAS
+# ============================================================
+
+@app.get("/notas-tecnicas", response_class=HTMLResponse)
+def listar_notas(request: Request, db: Session = Depends(get_db)):
+    usuario_logado(request, db)
+
+    notas = db.query(NotaTecnica).order_by(NotaTecnica.numero_sequencial.asc()).all()
+    return templates.TemplateResponse(
+        "lista_notas.html",
+        {"request": request, "notas": notas}
+    )
+
+
+# ============================================================
+# FORMULÁRIO DE NOTA TÉCNICA
+# ============================================================
+
+@app.get("/nota-tecnica/form", response_class=HTMLResponse)
+def form_nota(request: Request, db: Session = Depends(get_db)):
+    usuario_logado(request, db)
+    return templates.TemplateResponse("form_nota.html", {"request": request})
+
+
+# ============================================================
+# PROCESSAMENTO DA NOTA TÉCNICA
+# ============================================================
+
+@app.post("/nota-tecnica/gerar")
+def gerar_nota(
     request: Request,
     nome: str = Form(...),
     ocupacao: str = Form(...),
     matricula: str = Form(...),
     processo_pae: str = Form(...),
-    assunto: str = Form(""),
-    contrato_inicio: str = Form(...),
-    contrato_fim: str = Form(...),
-    ciclo1_usufruidos: int = Form(0),
-    ciclo2_usufruidos: int = Form(0),
-    db: Session = Depends(get_db),
+    inicio: str = Form(...),
+    fim: str = Form(...),
+    ciclo1_gozados: int = Form(...),
+    ciclo2_gozados: int = Form(...),
+    db: Session = Depends(get_db)
 ):
 
-    # ============================================================
-    # 1. CRIAR ESTAGIÁRIO
-    # ============================================================
+    usuario_logado(request, db)
 
+    # Criar estagiário
     est = Estagiario(
         nome=nome,
         ocupacao=ocupacao,
         matricula=matricula,
         processo_pae=processo_pae,
-        data_inicio_contrato=datetime.strptime(contrato_inicio, "%d/%m/%Y").date(),
-        data_fim_contrato=datetime.strptime(contrato_fim, "%d/%m/%Y").date(),
+        data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").date(),
+        data_fim_contrato=datetime.strptime(fim, "%Y-%m-%d").date(),
     )
     db.add(est)
     db.commit()
     db.refresh(est)
 
-    # ============================================================
-    # 2. CALCULAR CICLOS (LÓGICA VBA)
-    # ============================================================
-
-    info = montar_ciclos_a_partir_form(contrato_inicio, contrato_fim)
+    # Calcular ciclos
+    info = montar_ciclos_a_partir_form(inicio, fim)
 
     ciclos_criados = []
 
-    # --- 1º ciclo ---
+    # Ciclo 1
     c1 = info["ciclo1"]
     ciclo1 = Ciclo(
         estagiario_id=est.id,
         data_inicio=c1["inicio"],
         data_fim=c1["fim"],
-        dias_gozados=ciclo1_usufruidos,
+        dias_gozados=ciclo1_gozados,
+        dias_direito=c1["dias_direito"],
     )
     db.add(ciclo1)
-    ciclos_criados.append((c1, ciclo1_usufruidos))
+    ciclos_criados.append((c1, ciclo1_gozados))
 
-    # --- 2º ciclo (se existir) ---
+    # Ciclo 2
     c2 = info["ciclo2"]
     if c2["inicio"] and c2["fim"]:
         ciclo2 = Ciclo(
             estagiario_id=est.id,
             data_inicio=c2["inicio"],
             data_fim=c2["fim"],
-            dias_gozados=ciclo2_usufruidos,
+            dias_gozados=ciclo2_gozados,
+            dias_direito=c2["dias_direito"],
         )
         db.add(ciclo2)
-        ciclos_criados.append((c2, ciclo2_usufruidos))
+        ciclos_criados.append((c2, ciclo2_gozados))
 
     db.commit()
 
-    # ============================================================
-    # 3. CALCULAR TOTAL DE DIAS NÃO GOZADOS
-    # ============================================================
-
-    total_nao_gozados = 0
-    for ciclo_info, gozados in ciclos_criados:
-        nao_gozados = calcular_nao_gozados(ciclo_info["dias_direito"], gozados)
-        total_nao_gozados += nao_gozados
-
-    # ============================================================
-    # 4. CRIAR NOTA TÉCNICA
-    # ============================================================
-
-    numero_nota = f"{est.id:04d}/{date.today().year}"
-
-    texto_conclusao = montar_texto_conclusao_vba(
-        nome=est.nome,
-        total_nao_gozados=total_nao_gozados
+    # Calcular total de dias não gozados
+    total_nao_gozados = sum(
+        calcular_nao_gozados(c["dias_direito"], gozados)
+        for c, gozados in ciclos_criados
     )
 
+    # Criar Nota Técnica
     nota = NotaTecnica(
         estagiario_id=est.id,
-        numero_nota=numero_nota,
         total_dias_nao_gozados=total_nao_gozados,
-        texto_conclusao=texto_conclusao,
+        texto_conclusao=montar_texto_conclusao_vba(
+            nome=est.nome,
+            total_nao_gozados=total_nao_gozados
+        ),
         data_emissao=date.today(),
     )
     db.add(nota)
     db.commit()
     db.refresh(nota)
 
-    # ============================================================
-    # 5. REDIRECIONAR PARA VISUALIZAÇÃO
-    # ============================================================
+    # Gerar número oficial
+    nota.numero_nota = f"{nota.numero_sequencial}/{date.today().year} - DDVP/DRH/PCPA"
+    db.commit()
 
-    return RedirectResponse(
-        url=f"/nota-tecnica/{nota.id}/visualizar",
-        status_code=303,
-    )
-
-
-# ============================================================
-# VISUALIZAÇÃO DA NOTA TÉCNICA
-# ============================================================
-
-@app.get("/nota-tecnica/{nota_id}/visualizar", response_class=HTMLResponse)
-def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depends(get_db)):
-    nota = db.query(NotaTecnica).filter(NotaTecnica.id == nota_id).first()
-    est = db.query(Estagiario).filter(Estagiario.id == nota.estagiario_id).first()
-    ciclos = db.query(Ciclo).filter(Ciclo.estagiario_id == est.id).all()
-
-    return templates.TemplateResponse(
-        "nota_tecnica.html",
-        {
-            "request": request,
-            "nota": nota,
-            "estagiario": est,
-            "ciclos": ciclos,
-        }
-    )
-@app.get("/estagiarios", response_class=HTMLResponse)
-def listar_estagiarios(request: Request, db: Session = Depends(get_db)):
-    estagiarios = db.query(Estagiario).all()
-    return templates.TemplateResponse(
-        "lista_estagiarios.html",
-        {
-            "request": request,
-            "estagiarios": estagiarios
-        }
-    )
-@app.get("/notas-tecnicas", response_class=HTMLResponse)
-def listar_notas_tecnicas(request: Request, db: Session = Depends(get_db)):
-    notas = (
-        db.query(NotaTecnica)
-        .order_by(NotaTecnica.numero_sequencial.asc())
-        .all()
-    )
-    return templates.TemplateResponse(
-        "lista_notas.html",
-        {
-            "request": request,
-            "notas": notas
-        }
-    )
-@app.get("/", response_class=HTMLResponse)
-def menu_inicial(request: Request):
-    return templates.TemplateResponse(
-        "menu_inicial.html",
-        {"request": request}
-    )
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Sistema de Notas Técnicas</title>
-
-    <link rel="stylesheet" href="/static/theme.css">
-
-    <style>
-        .container {
-            max-width: 900px;
-            margin: 60px auto;
-            text-align: center;
-        }
-
-        .btn-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
-            margin-top: 30px;
-        }
-
-        .btn i {
-            margin-right: 10px;
-        }
-    </style>
-
-    <!-- Ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
-
-<body>
-
-<div class="container card">
-
-    <h1>Sistema de Gestão de Notas Técnicas</h1>
-
-    <div class="btn-grid">
-
-        <a class="btn" href="/nota-tecnica/form">
-            <i class="fa-solid fa-file-circle-plus"></i> Nova Nota Técnica
-        </a>
-
-        <a class="btn" href="/estagiarios">
-            <i class="fa-solid fa-users"></i> Estagiários
-        </a>
-
-        <a class="btn" href="/notas-tecnicas">
-            <i class="fa-solid fa-folder-open"></i> Notas Técnicas
-        </a>
-
-        <a class="btn" href="/docs">
-            <i class="fa-solid fa-book"></i> Documentação da API
-        </a>
-
-    </div>
-
-    <div class="footer">
-        Polícia Civil do Estado do Pará — DDVP / DRH
-    </div>
-
-</div>
-
-</body>
-</html>
-
+    return RedirectResponse(url="/notas-tecnicas", status_code=303)
