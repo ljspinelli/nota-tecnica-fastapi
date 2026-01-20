@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Nota Técnica {{ numero_nota }}</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            margin: 40px;
+            line-height: 1.6;
+            color: #000;
+        }
+        h1, h2, h3 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .linha {
+            border-bottom: 1px solid #000;
+            margin: 20px 0;
+        }
+        .secao {
+            margin-top: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #444;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        .rodape {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>NOTA TÉCNICA</h1>
+    <h3>Nº {{ numero_nota }}</h3>
+    <div class="linha"></div>
+
+    <div class="secao">
+        <h2>Dados do Estagiário</h2>
+        <p><strong>Nome:</strong> {{ estagiario.nome }}</p>
+        <p><strong>Ocupação:</strong> {{ estagiario.ocupacao }}</p>
+        <p><strong>Matrícula:</strong> {{ estagiario.matricula }}</p>
+        <p><strong>Processo PAE:</strong> {{ estagiario.processo_pae }}</p>
+        <p><strong>Contrato:</strong> {{ estagiario.data_inicio_contrato }} a {{ estagiario.data_fim_contrato }}</p>
+    </div>
+
+    <div class="secao">
+        <h2>Períodos de Recesso</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Período Aquisitivo</th>
+                    <th>Dias de Direito</th>
+                    <th>Dias Gozados</th>
+                    <th>Dias Não Gozados</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in periodos %}
+                <tr>
+                    <td>{{ p.periodo_aquisitivo_inicio }} a {{ p.periodo_aquisitivo_fim }}</td>
+                    <td>{{ p.dias_direito }}</td>
+                    <td>{{ p.dias_gozados }}</td>
+                    <td>{{ p.dias_nao_gozados }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="secao">
+        <h2>Conclusão</h2>
+        <p>{{ texto_conclusao }}</p>
+    </div>
+
+    <div class="rodape">
+        <p>Emitido em {{ data_emissao }}</p>
+    </div>
+
+</body>
+</html>
 
