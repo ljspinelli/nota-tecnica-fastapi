@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Notas Técnicas</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; }
+        th { background: #f2f2f2; }
+        h1 { margin-bottom: 10px; }
+        a { text-decoration: none; color: #0066cc; }
+    </style>
+</head>
+<body>
+
+<h1>Lista de Notas Técnicas</h1>
+
+<table>
+    <tr>
+        <th>Número</th>
+        <th>Estagiário</th>
+        <th>Dias Não Gozados</th>
+        <th>Data de Emissão</th>
+        <th>Ações</th>
+    </tr>
+
+    {% for n in notas %}
+    <tr>
+        <td>{{ n.numero_nota }}</td>
+        <td>{{ n.estagiario.nome }}</td>
+        <td>{{ n.total_dias_nao_gozados }}</td>
+        <td>{{ n.data_emissao.strftime("%d/%m/%Y") }}</td>
+        <td>
+            <a href="/nota-tecnica/{{ n.id }}/visualizar">Visualizar</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>
