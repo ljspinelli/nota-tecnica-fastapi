@@ -168,3 +168,17 @@ def montar_texto_conclusao_vba(nome: str, total_nao_gozados: int) -> str:
         f"{total_nao_gozados} dias de recesso não usufruídos, "
         f"fazendo jus ao pagamento correspondente."
     )
+# ============================================================
+# 5. AUTENTICAÇÃO DE USUÁRIOS (LOGIN)
+# ============================================================
+
+from passlib.context import CryptContext
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_senha(senha: str) -> str:
+    """Gera hash seguro para senha."""
+    return pwd_context.hash(senha)
+
+def verificar_senha(senha: str, senha_hash: str) -> bool:
+    """Verifica se a senha corresponde ao hash armazenado."""
+    return pwd_context.verify(senha, senha_hash)
