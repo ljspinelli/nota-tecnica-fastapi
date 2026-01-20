@@ -214,3 +214,68 @@ def menu_inicial(request: Request):
         "menu_inicial.html",
         {"request": request}
     )
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Notas Técnicas</title>
+
+    <link rel="stylesheet" href="/static/theme.css">
+
+    <style>
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            text-align: center;
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .btn i {
+            margin-right: 10px;
+        }
+    </style>
+
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="container card">
+
+    <h1>Sistema de Gestão de Notas Técnicas</h1>
+
+    <div class="btn-grid">
+
+        <a class="btn" href="/nota-tecnica/form">
+            <i class="fa-solid fa-file-circle-plus"></i> Nova Nota Técnica
+        </a>
+
+        <a class="btn" href="/estagiarios">
+            <i class="fa-solid fa-users"></i> Estagiários
+        </a>
+
+        <a class="btn" href="/notas-tecnicas">
+            <i class="fa-solid fa-folder-open"></i> Notas Técnicas
+        </a>
+
+        <a class="btn" href="/docs">
+            <i class="fa-solid fa-book"></i> Documentação da API
+        </a>
+
+    </div>
+
+    <div class="footer">
+        Polícia Civil do Estado do Pará — DDVP / DRH
+    </div>
+
+</div>
+
+</body>
+</html>
