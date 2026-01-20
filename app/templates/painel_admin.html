@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Administrativo</title>
+
+    <link rel="stylesheet" href="/static/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card-stat {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        .card-stat h2 {
+            font-size: 42px;
+            margin: 0;
+            color: #003366;
+        }
+
+        .card-stat p {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #444;
+        }
+
+        .btn-row {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        table {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Painel Administrativo</h1>
+
+    <!-- Estatísticas -->
+    <div class="cards">
+
+        <div class="card-stat">
+            <h2>{{ total_estagiarios }}</h2>
+            <p>Estagiários Cadastrados</p>
+        </div>
+
+        <div class="card-stat">
+            <h2>{{ total_notas }}</h2>
+            <p>Notas Técnicas Emitidas</p>
+        </div>
+
+        <div class="card-stat">
+            <h2>{{ total_dias_pagos }}</h2>
+            <p>Dias Não Gozados Pagos</p>
+        </div>
+
+    </div>
+
+    <!-- Acesso rápido -->
+    <div class="btn-row">
+        <a class="btn" href="/nota-tecnica/form">
+            <i class="fa-solid fa-file-circle-plus"></i> Nova Nota Técnica
+        </a>
+
+        <a class="btn" href="/estagiarios">
+            <i class="fa-solid fa-users"></i> Estagiários
+        </a>
+
+        <a class="btn" href="/notas-tecnicas">
+            <i class="fa-solid fa-folder-open"></i> Notas Técnicas
+        </a>
+    </div>
+
+    <!-- Últimas notas -->
+    <h2 style="margin-top: 50px;">Últimas Notas Emitidas</h2>
+
+    <table>
+        <tr>
+            <th>Número</th>
+            <th>Estagiário</th>
+            <th>Dias Não Gozados</th>
+            <th>Data</th>
+            <th>Ação</th>
+        </tr>
+
+        {% for n in ultimas_notas %}
+        <tr>
+            <td>{{ n.numero_nota }}</td>
+            <td>{{ n.estagiario.nome }}</td>
+            <td>{{ n.total_dias_nao_gozados }}</td>
+            <td>{{ n.data_emissao.strftime("%d/%m/%Y") }}</td>
+            <td>
+                <a href="/nota-tecnica/{{ n.id }}/visualizar">Visualizar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+</body>
+</html>
