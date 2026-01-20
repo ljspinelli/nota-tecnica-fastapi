@@ -1,101 +1,87 @@
-from datetime import date
-from typing import List
+from datetime import date, datetime, timedelta
+from typing import List, Optional
 from .models import Estagiario, Ciclo
 
 
-# ---------------------------------------------------------
-# Cálculo de meses entre duas datas
-# ---------------------------------------------------------
-def calcular_meses_entre(inicio: date, fim: date) -> int:
-    anos = fim.year - inicio.year
-    meses = fim.month - inicio.month
-    total = anos * 12 + meses
-
-    # Se o dia final é maior que o inicial, conta como mês cheio
-    if fim.day > inicio.day:
-        total += 1
-
-    return total
-
-
-# ---------------------------------------------------------
-# Dias de recesso conforme meses trabalhados
-# ---------------------------------------------------------
-def obter_dias_recesso_por_meses(meses: int) -> int:
-    if meses <= 6:
-        return 15
-    elif meses <= 12:
-        return 30
-    return 30
-
-
-# ---------------------------------------------------------
-# Cálculo dos períodos de recesso (com blindagem)
-# ---------------------------------------------------------
-def calcular_periodos_recesso(estagiario: Estagiario):
-    periodos = []
-
-    # 🔒 Blindagem: garantir que estagiario.ciclos existe e é lista
-    ciclos = getattr(estagiario, "ciclos", [])
-    if not isinstance(ciclos, list):
-        ciclos = []
-
-    for ciclo in ciclos:
-        meses = calcular_meses_entre(ciclo.data_inicio, ciclo.data_fim)
-        dias_direito = obter_dias_recesso_por_meses(meses)
-        dias_nao_gozados = max(dias_direito - ciclo.dias_gozados, 0)
-
-        periodo = {
-            "periodo_aquisitivo_inicio": ciclo.data_inicio,
-            "periodo_aquisitivo_fim": ciclo.data_fim,
-            "dias_direito": dias_direito,
-            "dias_gozados": ciclo.dias_gozados,
-            "dias_nao_gozados": dias_nao_gozados,
-        }
-
-        periodos.append(periodo)
-
-    return periodos
-
-
-# ---------------------------------------------------------
-# Montagem do texto de conclusão
-# ---------------------------------------------------------
-def montar_texto_conclusao(estagiario: Estagiario, periodos: List[dict]) -> str:
-    if not periodos:
-        return (
-            f"Conclui-se que o(a) ex-estagiário(a) {estagiario.nome} "
-            f"não possui períodos de recesso registrados."
-        )
-
-    linhas = []
-    for p in periodos:
-        linhas.append(
-            f"{p['periodo_aquisitivo_inicio'].strftime('%d/%m/%Y')} a "
-            f"{p['periodo_aquisitivo_fim'].strftime('%d/%m/%Y')} – "
-            f"{p['dias_nao_gozados']} dias"
-        )
-
-    corpo = " | ".join(linhas)
-
-    return (
-        f"Conclui-se que o(a) ex-estagiário(a) {estagiario.nome} faz jus ao recebimento "
-        f"dos dias de recesso não gozados referentes aos períodos: {corpo}."
-    )
-
-from datetime import datetime, date
-from typing import Optional
-
+# ============================================================
+# 1. UTILIDADES DE DATA
+# ============================================================
 
 def str_to_date_br(valor: str) -> date:
+    """Converte 'dd/mm/yyyy' para objeto date."""
     return datetime.strptime(valor, "%d/%m/%Y").date()
 
 
 def dias_entre(inicio: date, fim: date) -> int:
+    """Retorna a diferença em dias entre duas datas."""
     return (fim - inicio).days
 
 
+# ============================================================
+# 2. LÓGICA ANTIGA DO SISTEMA (MANTIDA)
+# ============================================================
+
+def calcular_meses_entre(inicio: date, fim: date) -> int:
+    """Calcula meses completos entre duas datas."""
+    anos = fim.year - inicio.year
+    meses = fim.month - inicio.month
+    total = anos * 12 + meses
+    if fim.day < inicio.day:
+        total -= 1
+    return max(total, 0)
+
+
+def obter_dias_recesso_por_meses(meses: int) -> int:
+    """Tabela antiga de dias de recesso por meses."""
+    if meses < 6:
+        return 0
+    elif meses == 6:
+        return 15
+    elif meses <= 7:
+        return 18
+    elif meses <= 8:
+        return 20
+    elif meses <= 9:
+        return 23
+    elif meses <= 10:
+        return 25
+    elif meses <= 11:
+        return 28
+    else:
+        return 30
+
+
+def calcular_periodos_recesso(estagiario: Estagiario):
+    """Cálculo antigo baseado em meses completos."""
+    inicio = estagiario.data_inicio_contrato
+    fim = estagiario.data_fim_contrato
+
+    meses = calcular_meses_entre(inicio, fim)
+    dias_direito = obter_dias_recesso_por_meses(meses)
+
+    return [{
+        "inicio": inicio,
+        "fim": fim,
+        "meses": meses,
+        "dias_direito": dias_direito,
+    }]
+
+
+def montar_texto_conclusao(estagiario: Estagiario, periodos: List[dict]) -> str:
+    """Texto padrão da Nota Técnica (modelo antigo)."""
+    total = sum(p["dias_direito"] for p in periodos)
+    return (
+        f"O(A) estagiário(a) {estagiario.nome} faz jus ao total de "
+        f"{total} dias de recesso, conforme legislação vigente."
+    )
+
+
+# ============================================================
+# 3. LÓGICA NOVA (TRADUÇÃO DO VBA)
+# ============================================================
+
 def calcular_dias_direito(dias_corridos: int) -> int:
+    """Tabela de dias de direito baseada no VBA."""
     if dias_corridos < 180:
         return 0
     elif dias_corridos == 180:
@@ -115,44 +101,36 @@ def calcular_dias_direito(dias_corridos: int) -> int:
     return 0
 
 
-def montar_ciclos_a_partir_form(
-    contrato_inicio_str: str,
-    contrato_fim_str: str,
-) -> dict:
+def montar_ciclos_a_partir_form(contrato_inicio_str: str, contrato_fim_str: str):
     """
-    Reproduz a lógica do VBA para:
-    - TextBox6 (início contrato)
-    - TextBox7 (fim contrato)
-    - TextBox10, 12, 11, 13
-    - TextBox14, 15
-    - TextBox16, 17
+    Reproduz a lógica do VBA para dividir o contrato em:
+    - 1º ciclo (até 364 dias)
+    - 2º ciclo (restante)
     """
     inicio = str_to_date_br(contrato_inicio_str)
     fim = str_to_date_br(contrato_fim_str)
-    dias_corridos = dias_entre(inicio, fim)
 
-    # TextBox22: dias de contrato
-    dias_contrato = dias_corridos
+    dias_contrato = dias_entre(inicio, fim)
 
     # 1º ciclo
-    if dias_corridos < 364:
+    if dias_contrato < 364:
         ciclo1_inicio = inicio
         ciclo1_fim = fim
         ciclo2_inicio = None
         ciclo2_fim = None
     else:
         ciclo1_inicio = inicio
-        ciclo1_fim = inicio.replace() + (fim - inicio).__class__(364)  # 364 dias
-        ciclo2_inicio = ciclo1_fim + (fim - fim.__class__(1))  # +1 dia
+        ciclo1_fim = inicio + timedelta(days=364)
+        ciclo2_inicio = ciclo1_fim + timedelta(days=1)
         ciclo2_fim = fim
 
-    # dias corridos por ciclo
-    dias_ciclo1 = dias_entre(ciclo1_inicio, ciclo1_fim) if ciclo1_fim else 0
-    dias_ciclo2 = dias_entre(ciclo2_inicio, ciclo2_fim) if ciclo2_inicio and ciclo2_fim else 0
+    # dias corridos
+    dias_ciclo1 = dias_entre(ciclo1_inicio, ciclo1_fim)
+    dias_ciclo2 = dias_entre(ciclo2_inicio, ciclo2_fim) if ciclo2_inicio else 0
 
-    # dias de direito por ciclo
-    direito_ciclo1 = calcular_dias_direito(dias_ciclo1) if ciclo1_fim else 0
-    direito_ciclo2 = calcular_dias_direito(dias_ciclo2) if ciclo2_fim else 0
+    # dias de direito
+    direito_ciclo1 = calcular_dias_direito(dias_ciclo1)
+    direito_ciclo2 = calcular_dias_direito(dias_ciclo2)
 
     return {
         "dias_contrato": dias_contrato,
@@ -172,6 +150,21 @@ def montar_ciclos_a_partir_form(
 
 
 def calcular_nao_gozados(dias_direito: int, dias_usufruidos: Optional[int]) -> int:
+    """Calcula dias não gozados conforme VBA."""
     if dias_usufruidos is None:
         return dias_direito
     return max(dias_direito - dias_usufruidos, 0)
+
+
+# ============================================================
+# 4. FUNÇÕES DE SUPORTE PARA NOTA TÉCNICA (NOVO MODELO)
+# ============================================================
+
+def montar_texto_conclusao_vba(nome: str, total_nao_gozados: int) -> str:
+    """Texto final da Nota Técnica baseado no modelo VBA."""
+    return (
+        f"Após análise dos períodos aquisitivos e de gozo, "
+        f"constata-se que o(a) estagiário(a) {nome} possui "
+        f"{total_nao_gozados} dias de recesso não usufruídos, "
+        f"fazendo jus ao pagamento correspondente."
+    )
