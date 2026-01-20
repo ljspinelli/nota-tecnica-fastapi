@@ -1,1 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Lançamento de Dados - Nota Técnica</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        fieldset { margin-bottom: 20px; }
+        label { display: block; margin-top: 8px; font-weight: bold; }
+        input { width: 100%; padding: 6px; margin-top: 3px; }
+        .linha { display: flex; gap: 10px; }
+        .linha > div { flex: 1; }
+        button { padding: 10px 20px; margin-top: 15px; }
+    </style>
+</head>
+<body>
 
+<h1>Lançamento de Dados</h1>
+
+<form action="/nota-tecnica/form" method="post">
+
+    <fieldset>
+        <legend>Dados do Estagiário(a)</legend>
+        <label>Nome</label>
+        <input type="text" name="nome" required>
+
+        <label>Ocupação</label>
+        <input type="text" name="ocupacao" required>
+
+        <label>Matrícula</label>
+        <input type="text" name="matricula" required>
+
+        <label>Processo PAE</label>
+        <input type="text" name="processo_pae" required>
+
+        <label>Assunto</label>
+        <input type="text" name="assunto">
+    </fieldset>
+
+    <fieldset>
+        <legend>Dados do Contrato</legend>
+        <div class="linha">
+            <div>
+                <label>Início</label>
+                <input type="text" name="contrato_inicio" placeholder="dd/mm/aaaa" required>
+            </div>
+            <div>
+                <label>Encerramento</label>
+                <input type="text" name="contrato_fim" placeholder="dd/mm/aaaa" required>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Período de Gozo de Recesso</legend>
+        <div class="linha">
+            <div>
+                <label>1º Ciclo - Dias usufruídos</label>
+                <input type="number" name="ciclo1_usufruidos" min="0" max="30" value="0">
+            </div>
+            <div>
+                <label>2º Ciclo - Dias usufruídos</label>
+                <input type="number" name="ciclo2_usufruidos" min="0" max="30" value="0">
+            </div>
+        </div>
+    </fieldset>
+
+    <button type="submit">Salvar / Gerar Nota Técnica</button>
+</form>
+
+</body>
+</html>
