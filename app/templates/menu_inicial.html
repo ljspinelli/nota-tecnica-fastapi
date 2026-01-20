@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Notas Técnicas</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 32px;
+            color: #333;
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            display: block;
+            padding: 18px;
+            background: #003366;
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            border-radius: 8px;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: #0055aa;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 14px;
+            color: #777;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Sistema de Gestão de Notas Técnicas</h1>
+
+    <div class="btn-grid">
+
+        <a class="btn" href="/nota-tecnica/form">
+            ➤ Lançar Nova Nota Técnica
+        </a>
+
+        <a class="btn" href="/estagiarios">
+            ➤ Lista de Estagiários
+        </a>
+
+        <a class="btn" href="/notas-tecnicas">
+            ➤ Lista de Notas Técnicas
+        </a>
+
+        <a class="btn" href="/docs">
+            ➤ Documentação da API
+        </a>
+
+    </div>
+
+    <div class="footer">
+        Polícia Civil do Estado do Pará — DDVP / DRH  
+    </div>
+
+</div>
+
+</body>
+</html>
