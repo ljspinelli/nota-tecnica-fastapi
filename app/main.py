@@ -14,6 +14,13 @@ from .services import (
     calcular_nao_gozados,
     montar_texto_conclusao_vba,
 )
+from fastapi.middleware.sessions import SessionMiddleware
+from fastapi import HTTPException
+from fastapi.responses import RedirectResponse
+from datetime import datetime
+
+from .models import User
+from .services import verificar_senha
 
 # ============================================================
 # CONFIGURAÇÃO INICIAL
@@ -22,6 +29,8 @@ from .services import (
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(SessionMiddleware, secret_key="CHAVE-SECRETA-MUITO-FORTE")
 
 templates = Jinja2Templates(directory="app/templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -279,3 +288,4 @@ def menu_inicial(request: Request):
 
 </body>
 </html>
+
