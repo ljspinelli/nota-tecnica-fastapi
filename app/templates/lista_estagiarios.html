@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Estagiários</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; }
+        th { background: #f2f2f2; }
+        h1 { margin-bottom: 10px; }
+        a { text-decoration: none; color: #0066cc; }
+    </style>
+</head>
+<body>
+
+<h1>Lista de Estagiários</h1>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Matrícula</th>
+        <th>Processo PAE</th>
+        <th>Contrato</th>
+        <th>Ações</th>
+    </tr>
+
+    {% for e in estagiarios %}
+    <tr>
+        <td>{{ e.id }}</td>
+        <td>{{ e.nome }}</td>
+        <td>{{ e.matricula }}</td>
+        <td>{{ e.processo_pae }}</td>
+        <td>{{ e.data_inicio_contrato.strftime("%d/%m/%Y") }} a {{ e.data_fim_contrato.strftime("%d/%m/%Y") }}</td>
+        <td>
+            <a href="/nota-tecnica/form">Gerar Nota</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>
