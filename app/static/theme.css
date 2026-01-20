@@ -1,0 +1,69 @@
+/* ============================
+   TEMA INSTITUCIONAL PCPA
+   ============================ */
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    color: #222;
+}
+
+/* Cabeçalhos */
+h1, h2, h3 {
+    color: #003366;
+    font-weight: bold;
+}
+
+/* Botões */
+.btn {
+    display: inline-block;
+    padding: 14px 22px;
+    background: #003366;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    background: #0055aa;
+}
+
+/* Cartões */
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    margin-bottom: 25px;
+}
+
+/* Tabelas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 18px;
+}
+
+table th {
+    background: #003366;
+    color: white;
+    padding: 10px;
+}
+
+table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+/* Rodapé */
+.footer {
+    margin-top: 40px;
+    text-align: center;
+    color: #555;
+    font-size: 14px;
+}
