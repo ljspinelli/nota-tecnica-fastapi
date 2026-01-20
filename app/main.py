@@ -184,3 +184,13 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
             "ciclos": ciclos,
         }
     )
+@app.get("/estagiarios", response_class=HTMLResponse)
+def listar_estagiarios(request: Request, db: Session = Depends(get_db)):
+    estagiarios = db.query(Estagiario).all()
+    return templates.TemplateResponse(
+        "lista_estagiarios.html",
+        {
+            "request": request,
+            "estagiarios": estagiarios
+        }
+    )
