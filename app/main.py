@@ -269,4 +269,16 @@ def gerar_nota(
     db.commit()
 
     return RedirectResponse(url="/notas-tecnicas", status_code=303)
+@app.get("/criar-admin")
+def criar_admin(db: Session = Depends(get_db)):
+    if db.query(User).filter(User.username == "admin").first():
+        return {"mensagem": "Usuário admin já existe."}
+
+    admin = User(
+        username="admin",
+        senha_hash=hash_senha("123456")
+    )
+    db.add(admin)
+    db.commit()
+    return {"mensagem": "Usuário admin criado com sucesso!"}
 
