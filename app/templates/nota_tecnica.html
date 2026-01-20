@@ -2,92 +2,226 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Nota Técnica {{ numero_nota }}</title>
+    <title>Nota Técnica {{ nota.numero_nota }}</title>
+
     <style>
         body {
             font-family: "Times New Roman", serif;
             margin: 40px;
-            line-height: 1.6;
-            color: #000;
+            line-height: 1.5;
         }
+
         h1, h2, h3 {
             text-align: center;
-            margin-bottom: 5px;
+            margin: 0;
+            padding: 0;
         }
-        .linha {
-            border-bottom: 1px solid #000;
-            margin: 20px 0;
+
+        .cabecalho {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .secao {
-            margin-top: 25px;
+
+        .cabecalho img {
+            width: 90px;
+            margin-bottom: 10px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 18px;
+            margin-bottom: 18px;
         }
-        table, th, td {
-            border: 1px solid #444;
-        }
-        th, td {
-            padding: 8px;
-            text-align: center;
-        }
-        .rodape {
-            margin-top: 40px;
-            text-align: center;
+
+        table th, table td {
+            border: 1px solid #000;
+            padding: 6px;
             font-size: 14px;
+        }
+
+        table th {
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+
+        .titulo-secao {
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .assinaturas {
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .assinatura-bloco {
+            margin-top: 40px;
+        }
+
+        .assinatura-nome {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .rodape {
+            margin-top: 60px;
+            font-size: 12px;
+            text-align: center;
+            color: #444;
         }
     </style>
 </head>
+
 <body>
 
-    <h1>NOTA TÉCNICA</h1>
-    <h3>Nº {{ numero_nota }}</h3>
-    <div class="linha"></div>
-
-    <div class="secao">
-        <h2>Dados do Estagiário</h2>
-        <p><strong>Nome:</strong> {{ estagiario.nome }}</p>
-        <p><strong>Ocupação:</strong> {{ estagiario.ocupacao }}</p>
-        <p><strong>Matrícula:</strong> {{ estagiario.matricula }}</p>
-        <p><strong>Processo PAE:</strong> {{ estagiario.processo_pae }}</p>
-        <p><strong>Contrato:</strong> {{ estagiario.data_inicio_contrato }} a {{ estagiario.data_fim_contrato }}</p>
+    <!-- CABEÇALHO -->
+    <div class="cabecalho">
+        <img src="/static/logo_pcpa.png" alt="Logo Polícia Civil">
+        <h2>POLÍCIA CIVIL DO ESTADO DO PARÁ</h2>
+        <h3>DIRETORIA DE RECURSOS HUMANOS</h3>
+        <h3>COORDENADORIA DE DESENVOLVIMENTO DE PESSOAS</h3>
+        <h3>DIVISÃO DE DESENVOLVIMENTO E VALORIZAÇÃO DE PESSOAL</h3>
     </div>
 
-    <div class="secao">
-        <h2>Períodos de Recesso</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Período Aquisitivo</th>
-                    <th>Dias de Direito</th>
-                    <th>Dias Gozados</th>
-                    <th>Dias Não Gozados</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in periodos %}
-                <tr>
-                    <td>{{ p.periodo_aquisitivo_inicio }} a {{ p.periodo_aquisitivo_fim }}</td>
-                    <td>{{ p.dias_direito }}</td>
-                    <td>{{ p.dias_gozados }}</td>
-                    <td>{{ p.dias_nao_gozados }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <!-- TÍTULO -->
+    <h2 style="margin-top: 20px;">
+        NOTA TÉCNICA Nº {{ nota.numero_nota }} - DDVP/DRH/PCPA
+    </h2>
 
-    <div class="secao">
-        <h2>Conclusão</h2>
-        <p>{{ texto_conclusao }}</p>
+    <!-- DADOS DO ESTAGIÁRIO -->
+    <table>
+        <tr>
+            <td><strong>Ex-Estagiário(a):</strong></td>
+            <td>{{ estagiario.nome }}</td>
+        </tr>
+        <tr>
+            <td><strong>Ocupação:</strong></td>
+            <td>{{ estagiario.ocupacao }}</td>
+        </tr>
+        <tr>
+            <td><strong>Matrícula:</strong></td>
+            <td>{{ estagiario.matricula }}</td>
+        </tr>
+        <tr>
+            <td><strong>Processo PAE:</strong></td>
+            <td>{{ estagiario.processo_pae }}</td>
+        </tr>
+    </table>
+
+    <!-- OBJETIVO -->
+    <div class="titulo-secao">1. OBJETIVO</div>
+    <p>
+        Dar celeridade na análise do pleito referente ao pagamento em pecúnia do recesso remunerado não gozado,
+        considerando que o(a) interessado(a) informa não ter recebido tal vantagem quando estava na ativa.
+        Esta Nota Técnica visa regulamentar os procedimentos necessários para a implementação do pagamento
+        por meio de folha suplementar.
+    </p>
+
+    <!-- FUNDAMENTAÇÃO LEGAL -->
+    <div class="titulo-secao">2. FUNDAMENTAÇÃO LEGAL</div>
+    <p>A presente Nota Técnica está consubstanciada nos seguintes fundamentos legais:</p>
+
+    <ul>
+        <li>Lei Federal nº 11.788/2008;</li>
+        <li>Decreto Estadual nº 1.941/2017;</li>
+        <li>Manifestação Jurídica nº 1978/2021 - CONJUR/PCPA;</li>
+        <li>Parecer Jurídico nº 000156/2022 - PGE.</li>
+    </ul>
+
+    <!-- INSTRUÇÃO -->
+    <div class="titulo-secao">3. INSTRUÇÃO</div>
+
+    <p>Após análise do contrato do(a) ex-estagiário(a), verificam-se os seguintes períodos:</p>
+
+    <table>
+        <tr>
+            <th colspan="3">Período de Contrato</th>
+        </tr>
+        <tr>
+            <th>Início</th>
+            <th>Encerramento</th>
+            <th>Dias Totais</th>
+        </tr>
+        <tr>
+            <td>{{ estagiario.data_inicio_contrato.strftime("%d/%m/%Y") }}</td>
+            <td>{{ estagiario.data_fim_contrato.strftime("%d/%m/%Y") }}</td>
+            <td>{{ nota.total_dias_nao_gozados + ciclos|sum(attribute="dias_gozados") }}</td>
+        </tr>
+    </table>
+
+    <p>Computando-se os seguintes períodos aquisitivos de recesso remunerado:</p>
+
+    <table>
+        <tr>
+            <th>Ciclo</th>
+            <th>Data Início</th>
+            <th>Data Fim</th>
+            <th>Contagem</th>
+            <th>Direito</th>
+            <th>Gozados</th>
+            <th>Não Gozados</th>
+        </tr>
+
+        {% for ciclo in ciclos %}
+        <tr>
+            <td>{{ loop.index }}º Ciclo</td>
+            <td>{{ ciclo.data_inicio.strftime("%d/%m/%Y") }}</td>
+            <td>{{ ciclo.data_fim.strftime("%d/%m/%Y") }}</td>
+            <td>{{ (ciclo.data_fim - ciclo.data_inicio).days }}</td>
+            <td>{{ ciclo.dias_direito }}</td>
+            <td>{{ ciclo.dias_gozados }}</td>
+            <td>{{ ciclo.dias_direito - ciclo.dias_gozados }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- CONCLUSÃO -->
+    <div class="titulo-secao">4. CONCLUSÃO</div>
+
+    <p>{{ nota.texto_conclusao }}</p>
+
+    <table>
+        <tr>
+            <th>Período Aquisitivo</th>
+            <th>Dias Não Gozados</th>
+        </tr>
+
+        {% for ciclo in ciclos %}
+        <tr>
+            <td>{{ ciclo.data_inicio.strftime("%d/%m/%Y") }} a {{ ciclo.data_fim.strftime("%d/%m/%Y") }}</td>
+            <td>{{ ciclo.dias_direito - ciclo.dias_gozados }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p style="margin-top: 30px;">
+        Belém, {{ nota.data_emissao.strftime("%d de %B de %Y") }}
+    </p>
+
+    <!-- ASSINATURAS -->
+    <div class="assinaturas">
+
+        <div class="assinatura-bloco">
+            <div class="assinatura-nome">PAULO GENTIL PANTOJA RAIOL</div>
+            <div>Assistente Administrativo</div>
+            <div>DDVP/CDP/DRH/PC-PA</div>
+        </div>
+
+        <div class="assinatura-bloco">
+            <div class="assinatura-nome">RODRIGO BARBOSA DO NASCIMENTO</div>
+            <div>Coordenador de Desenvolvimento de Pessoas</div>
+            <div>CDP/DRH/PC-PA</div>
+        </div>
+
     </div>
 
     <div class="rodape">
-        <p>Emitido em {{ data_emissao }}</p>
+        Endereço: Av. Gov. Magalhães Barata, 209 - Nazaré - CEP: 66.040.170 - Belém - Pará  
+        Telefone: 4006-9006 — Site: www.policiacivil.pa.gov.br — E-mail: drhfpag@policiacivil.pa.gov.br
     </div>
 
 </body>
 </html>
-
