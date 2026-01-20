@@ -348,3 +348,104 @@ def visualizar_nota_tecnica(nota_id: int, request: Request, db: Session = Depend
             "data_emissao": nota.data_emissao.strftime("%d/%m/%Y")
         }
     )
+from fastapi import Form, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.orm import Session
+from .models import Estagiario, Ciclo, NotaTecnica
+from .services import (
+    montar_ciclos_a_partir_form,
+    calcular_nao_gozados,
+)
+from datetime import date
+
+
+@app.get("/nota-tecnica/form", response_class=HTMLResponse)
+def form_nota_tecnica(request: Request, db: Session = Depends(get_db)):
+    return templates.TemplateResponse(
+        "lancamento_dados.html",
+        {"request": request},
+    )
+
+
+@app.post("/nota-tecnica/form", response_class=HTMLResponse)
+def criar_nota_tecnica_form(
+    request: Request,
+    nome: str = Form(...),
+    ocupacao: str = Form(...),
+    matricula: str = Form(...),
+    processo_pae: str = Form(...),
+    assunto: str = Form(""),
+    contrato_inicio: str = Form(...),  # dd/mm/yyyy
+    contrato_fim: str = Form(...),     # dd/mm/yyyy
+    ciclo1_usufruidos: int = Form(0),
+    ciclo2_usufruidos: int = Form(0),
+    db: Session = Depends(get_db),
+):
+    # 1. Criar estagiário
+    est = Estagiario(
+        nome=nome,
+        ocupacao=ocupacao,
+        matricula=matricula,
+        processo_pae=processo_pae,
+        data_inicio_contrato=datetime.strptime(contrato_inicio, "%d/%m/%Y").date(),
+        data_fim_contrato=datetime.strptime(contrato_fim, "%d/%m/%Y").date(),
+    )
+    db.add(est)
+    db.commit()
+    db.refresh(est)
+
+    # 2. Calcular ciclos
+    info = montar_ciclos_a_partir_form(contrato_inicio, contrato_fim)
+
+    ciclos_criados = []
+
+    # 1º ciclo
+    c1 = info["ciclo1"]
+    ciclo1 = Ciclo(
+        estagiario_id=est.id,
+        data_inicio=c1["inicio"],
+        data_fim=c1["fim"],
+        dias_gozados=ciclo1_usufruidos,
+    )
+    db.add(ciclo1)
+    ciclos_criados.append((c1, ciclo1_usufruidos))
+
+    # 2º ciclo (se existir)
+    c2 = info["ciclo2"]
+    if c2["inicio"] and c2["fim"]:
+        ciclo2 = Ciclo(
+            estagiario_id=est.id,
+            data_inicio=c2["inicio"],
+            data_fim=c2["fim"],
+            dias_gozados=ciclo2_usufruidos,
+        )
+        db.add(ciclo2)
+        ciclos_criados.append((c2, ciclo2_usufruidos))
+
+    db.commit()
+
+    # 3. Calcular total de dias não gozados
+    total_nao_gozados = 0
+    for ciclo_info, gozados in ciclos_criados:
+        nao_gozados = calcular_nao_gozados(ciclo_info["dias_direito"], gozados)
+        total_nao_gozados += nao_gozados
+
+    # 4. Criar Nota Técnica
+    numero_nota = f"{est.id:04d}/{date.today().year}"
+    texto_conclusao = f"O(A) ex-estagiário(a) {est.nome} faz jus ao recebimento de {total_nao_gozados} dias de recesso não gozados."
+    nota = NotaTecnica(
+        estagiario_id=est.id,
+        numero_nota=numero_nota,
+        total_dias_nao_gozados=total_nao_gozados,
+        texto_conclusao=texto_conclusao,
+        data_emissao=date.today(),
+    )
+    db.add(nota)
+    db.commit()
+    db.refresh(nota)
+
+    # 5. Redirecionar para visualização
+    return RedirectResponse(
+        url=f"/nota-tecnica/{nota.id}/visualizar",
+        status_code=303,
+    )
