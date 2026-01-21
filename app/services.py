@@ -136,13 +136,18 @@ def montar_texto_conclusao_vba(nome: str, total_nao_gozados: int) -> str:
     )
 
 # ============================================================
-# 5. AUTENTICAÇÃO
+# 5. AUTENTICAÇÃO (CORRIGIDO)
 # ============================================================
 
 from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_senha(senha: str) -> str:
+    # Correção definitiva do erro "password cannot be longer than 72 bytes"
+    if senha is None:
+        raise ValueError("Senha não pode ser nula")
+
+    senha = str(senha)[:72]  # Limite técnico do bcrypt
     return pwd_context.hash(senha)
 
 def verificar_senha(senha: str, senha_hash: str) -> bool:
