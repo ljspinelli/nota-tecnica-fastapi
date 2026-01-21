@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, Date, ForeignKey, Text, DateTime
 from sqlalchemy.orm import relationship
 from .database import Base
 
-
 # ============================================================
 # ESTAGIÁRIO
 # ============================================================
@@ -50,11 +49,7 @@ class NotaTecnica(Base):
     __tablename__ = "notas_tecnicas"
 
     id = Column(Integer, primary_key=True, index=True)
-
-    # Número sequencial gerado pelo sistema (não pelo banco)
     numero_sequencial = Column(Integer, unique=True, index=True)
-
-    # Número oficial da nota (ex: "3/2026 - DDVP/DRH/PCPA")
     numero_nota = Column(String, index=True)
 
     estagiario_id = Column(Integer, ForeignKey("estagiarios.id"))
@@ -75,6 +70,4 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
     senha_hash = Column(String, nullable=False)
-
-    # Data/hora do último login
     ultimo_acesso = Column(DateTime, default=None)
