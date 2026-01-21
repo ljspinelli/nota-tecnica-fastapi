@@ -253,16 +253,20 @@ def gerar_nota(
 
 @app.get("/criar-admin")
 def criar_admin(db: Session = Depends(get_db)):
-    if db.query(User).filter(User.username == "admin").first():
-        return {"mensagem": "Usuário admin já existe."}
+    try:
+        if db.query(User).filter(User.username == "admin").first():
+            return {"mensagem": "Usuário admin já existe."}
 
-    admin = User(
-        username="admin",
-        senha_hash=hash_senha("123456")
-    )
-    db.add(admin)
-    db.commit()
-    return {"mensagem": "Usuário admin criado com sucesso!"}
+        admin = User(
+            username="admin",
+            senha_hash=hash_senha("123456"),
+            ultimo_acesso=None
+        )
+        db.add(admin)
+        db.commit()
+        return {"mensagem": "Usuário admin criado com sucesso!"}
+    except Exception as e:
+        return {"erro": str(e)}
 
 
 # ============================================================
@@ -279,3 +283,4 @@ def debug_db(db: Session = Depends(get_db)):
         return {"status": "OK", "mensagem": "Tabela 'usuarios' existe e está acessível."}
     except Exception as e:
         return {"status": "ERRO", "detalhes": str(e)}
+
