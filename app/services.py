@@ -2,27 +2,21 @@ from datetime import date, datetime, timedelta
 from typing import List, Optional
 from .models import Estagiario, Ciclo
 
-
 # ============================================================
 # 1. UTILIDADES DE DATA
 # ============================================================
 
 def str_to_date_br(valor: str) -> date:
-    """Converte 'dd/mm/yyyy' para objeto date."""
     return datetime.strptime(valor, "%d/%m/%Y").date()
 
-
 def dias_entre(inicio: date, fim: date) -> int:
-    """Retorna a diferença em dias entre duas datas."""
     return (fim - inicio).days
 
-
 # ============================================================
-# 2. LÓGICA ANTIGA DO SISTEMA (MANTIDA)
+# 2. LÓGICA ANTIGA DO SISTEMA
 # ============================================================
 
 def calcular_meses_entre(inicio: date, fim: date) -> int:
-    """Calcula meses completos entre duas datas."""
     anos = fim.year - inicio.year
     meses = fim.month - inicio.month
     total = anos * 12 + meses
@@ -30,9 +24,7 @@ def calcular_meses_entre(inicio: date, fim: date) -> int:
         total -= 1
     return max(total, 0)
 
-
 def obter_dias_recesso_por_meses(meses: int) -> int:
-    """Tabela antiga de dias de recesso por meses."""
     if meses < 6:
         return 0
     elif meses == 6:
@@ -50,15 +42,11 @@ def obter_dias_recesso_por_meses(meses: int) -> int:
     else:
         return 30
 
-
 def calcular_periodos_recesso(estagiario: Estagiario):
-    """Cálculo antigo baseado em meses completos."""
     inicio = estagiario.data_inicio_contrato
     fim = estagiario.data_fim_contrato
-
     meses = calcular_meses_entre(inicio, fim)
     dias_direito = obter_dias_recesso_por_meses(meses)
-
     return [{
         "inicio": inicio,
         "fim": fim,
@@ -66,22 +54,18 @@ def calcular_periodos_recesso(estagiario: Estagiario):
         "dias_direito": dias_direito,
     }]
 
-
 def montar_texto_conclusao(estagiario: Estagiario, periodos: List[dict]) -> str:
-    """Texto padrão da Nota Técnica (modelo antigo)."""
     total = sum(p["dias_direito"] for p in periodos)
     return (
         f"O(A) estagiário(a) {estagiario.nome} faz jus ao total de "
         f"{total} dias de recesso, conforme legislação vigente."
     )
 
-
 # ============================================================
-# 3. LÓGICA NOVA (TRADUÇÃO DO VBA)
+# 3. LÓGICA NOVA (VBA)
 # ============================================================
 
 def calcular_dias_direito(dias_corridos: int) -> int:
-    """Tabela de dias de direito baseada no VBA."""
     if dias_corridos < 180:
         return 0
     elif dias_corridos == 180:
@@ -100,19 +84,11 @@ def calcular_dias_direito(dias_corridos: int) -> int:
         return 30
     return 0
 
-
 def montar_ciclos_a_partir_form(contrato_inicio_str: str, contrato_fim_str: str):
-    """
-    Reproduz a lógica do VBA para dividir o contrato em:
-    - 1º ciclo (até 364 dias)
-    - 2º ciclo (restante)
-    """
     inicio = str_to_date_br(contrato_inicio_str)
     fim = str_to_date_br(contrato_fim_str)
-
     dias_contrato = dias_entre(inicio, fim)
 
-    # 1º ciclo
     if dias_contrato < 364:
         ciclo1_inicio = inicio
         ciclo1_fim = fim
@@ -124,11 +100,9 @@ def montar_ciclos_a_partir_form(contrato_inicio_str: str, contrato_fim_str: str)
         ciclo2_inicio = ciclo1_fim + timedelta(days=1)
         ciclo2_fim = fim
 
-    # dias corridos
     dias_ciclo1 = dias_entre(ciclo1_inicio, ciclo1_fim)
     dias_ciclo2 = dias_entre(ciclo2_inicio, ciclo2_fim) if ciclo2_inicio else 0
 
-    # dias de direito
     direito_ciclo1 = calcular_dias_direito(dias_ciclo1)
     direito_ciclo2 = calcular_dias_direito(dias_ciclo2)
 
@@ -148,37 +122,28 @@ def montar_ciclos_a_partir_form(contrato_inicio_str: str, contrato_fim_str: str)
         },
     }
 
-
 def calcular_nao_gozados(dias_direito: int, dias_usufruidos: Optional[int]) -> int:
-    """Calcula dias não gozados conforme VBA."""
     if dias_usufruidos is None:
         return dias_direito
     return max(dias_direito - dias_usufruidos, 0)
 
-
-# ============================================================
-# 4. FUNÇÕES DE SUPORTE PARA NOTA TÉCNICA (NOVO MODELO)
-# ============================================================
-
 def montar_texto_conclusao_vba(nome: str, total_nao_gozados: int) -> str:
-    """Texto final da Nota Técnica baseado no modelo VBA."""
     return (
         f"Após análise dos períodos aquisitivos e de gozo, "
         f"constata-se que o(a) estagiário(a) {nome} possui "
         f"{total_nao_gozados} dias de recesso não usufruídos, "
         f"fazendo jus ao pagamento correspondente."
     )
+
 # ============================================================
-# 5. AUTENTICAÇÃO DE USUÁRIOS (LOGIN)
+# 5. AUTENTICAÇÃO
 # ============================================================
 
 from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_senha(senha: str) -> str:
-    """Gera hash seguro para senha."""
     return pwd_context.hash(senha)
 
 def verificar_senha(senha: str, senha_hash: str) -> bool:
-    """Verifica se a senha corresponde ao hash armazenado."""
     return pwd_context.verify(senha, senha_hash)
