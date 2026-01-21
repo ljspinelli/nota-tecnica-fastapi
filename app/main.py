@@ -14,29 +14,13 @@ from .services import (
     montar_texto_conclusao_vba,
     verificar_senha,
     hash_senha
-
 )
 
-# ============================================================
-# CONFIGURAÇÃO DO FASTAPI
-# ============================================================
-
 app = FastAPI()
-
-# Sessão com cookies
 app.add_middleware(SessionMiddleware, secret_key="CHAVE-SECRETA-MUITO-FORTE")
-
-# Criar tabelas no banco
-Base.metadata.create_all(bind=engine)
-
-# Templates e arquivos estáticos
 templates = Jinja2Templates(directory="app/templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-
-# ============================================================
-# DEPENDÊNCIA DO BANCO
-# ============================================================
 
 def get_db():
     db = SessionLocal()
@@ -45,10 +29,6 @@ def get_db():
     finally:
         db.close()
 
-
-# ============================================================
-# FUNÇÃO DE VERIFICAÇÃO DE LOGIN
-# ============================================================
 
 def usuario_logado(request: Request, db: Session):
     user_id = request.session.get("user_id")
@@ -62,10 +42,6 @@ def usuario_logado(request: Request, db: Session):
     return user
 
 
-# ============================================================
-# ENDPOINTS DE LOGIN E LOGOUT
-# ============================================================
-
 @app.get("/login", response_class=HTMLResponse)
 def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
@@ -73,7 +49,6 @@ def login_form(request: Request):
 
 @app.post("/login")
 def login(request: Request, username: str = Form(...), senha: str = Form(...), db: Session = Depends(get_db)):
-
     user = db.query(User).filter(User.username == username).first()
 
     if not user or not verificar_senha(senha, user.senha_hash):
@@ -82,10 +57,7 @@ def login(request: Request, username: str = Form(...), senha: str = Form(...), d
             {"request": request, "erro": "Usuário ou senha inválidos"}
         )
 
-    # Salvar sessão
     request.session["user_id"] = user.id
-
-    # Registrar data/hora do acesso
     user.ultimo_acesso = datetime.now()
     db.commit()
 
@@ -98,18 +70,10 @@ def logout(request: Request):
     return RedirectResponse(url="/login", status_code=303)
 
 
-# ============================================================
-# MENU INICIAL
-# ============================================================
-
 @app.get("/", response_class=HTMLResponse)
 def menu_inicial(request: Request):
     return templates.TemplateResponse("menu_inicial.html", {"request": request})
 
-
-# ============================================================
-# PAINEL ADMINISTRATIVO
-# ============================================================
 
 @app.get("/admin", response_class=HTMLResponse)
 def painel_admin(request: Request, db: Session = Depends(get_db)):
@@ -117,17 +81,8 @@ def painel_admin(request: Request, db: Session = Depends(get_db)):
 
     total_estagiarios = db.query(Estagiario).count()
     total_notas = db.query(NotaTecnica).count()
-
-    total_dias_pagos = sum(
-        [n.total_dias_nao_gozados for n in db.query(NotaTecnica).all()]
-    )
-
-    ultimas_notas = (
-        db.query(NotaTecnica)
-        .order_by(NotaTecnica.id.desc())
-        .limit(5)
-        .all()
-    )
+    total_dias_pagos = sum([n.total_dias_nao_gozados for n in db.query(NotaTecnica).all()])
+    ultimas_notas = db.query(NotaTecnica).order_by(NotaTecnica.id.desc()).limit(5).all()
 
     return templates.TemplateResponse(
         "painel_admin.html",
@@ -141,49 +96,25 @@ def painel_admin(request: Request, db: Session = Depends(get_db)):
     )
 
 
-# ============================================================
-# LISTAGEM DE ESTAGIÁRIOS
-# ============================================================
-
 @app.get("/estagiarios", response_class=HTMLResponse)
 def listar_estagiarios(request: Request, db: Session = Depends(get_db)):
     usuario_logado(request, db)
-
     estagiarios = db.query(Estagiario).all()
-    return templates.TemplateResponse(
-        "lista_estagiarios.html",
-        {"request": request, "estagiarios": estagiarios}
-    )
+    return templates.TemplateResponse("lista_estagiarios.html", {"request": request, "estagiarios": estagiarios})
 
-
-# ============================================================
-# LISTAGEM DE NOTAS TÉCNICAS
-# ============================================================
 
 @app.get("/notas-tecnicas", response_class=HTMLResponse)
 def listar_notas(request: Request, db: Session = Depends(get_db)):
     usuario_logado(request, db)
-
     notas = db.query(NotaTecnica).order_by(NotaTecnica.numero_sequencial.asc()).all()
-    return templates.TemplateResponse(
-        "lista_notas.html",
-        {"request": request, "notas": notas}
-    )
+    return templates.TemplateResponse("lista_notas.html", {"request": request, "notas": notas})
 
-
-# ============================================================
-# FORMULÁRIO DE NOTA TÉCNICA
-# ============================================================
 
 @app.get("/nota-tecnica/form", response_class=HTMLResponse)
 def form_nota(request: Request, db: Session = Depends(get_db)):
     usuario_logado(request, db)
     return templates.TemplateResponse("form_nota.html", {"request": request})
 
-
-# ============================================================
-# PROCESSAMENTO DA NOTA TÉCNICA
-# ============================================================
 
 @app.post("/nota-tecnica/gerar")
 def gerar_nota(
@@ -198,10 +129,8 @@ def gerar_nota(
     ciclo2_gozados: int = Form(...),
     db: Session = Depends(get_db)
 ):
-
     usuario_logado(request, db)
 
-    # Criar estagiário
     est = Estagiario(
         nome=nome,
         ocupacao=ocupacao,
@@ -214,12 +143,9 @@ def gerar_nota(
     db.commit()
     db.refresh(est)
 
-    # Calcular ciclos
     info = montar_ciclos_a_partir_form(inicio, fim)
-
     ciclos_criados = []
 
-    # Ciclo 1
     c1 = info["ciclo1"]
     ciclo1 = Ciclo(
         estagiario_id=est.id,
@@ -231,7 +157,6 @@ def gerar_nota(
     db.add(ciclo1)
     ciclos_criados.append((c1, ciclo1_gozados))
 
-    # Ciclo 2
     c2 = info["ciclo2"]
     if c2["inicio"] and c2["fim"]:
         ciclo2 = Ciclo(
@@ -246,13 +171,11 @@ def gerar_nota(
 
     db.commit()
 
-    # Calcular total de dias não gozados
     total_nao_gozados = sum(
         calcular_nao_gozados(c["dias_direito"], gozados)
         for c, gozados in ciclos_criados
     )
 
-    # Criar Nota Técnica
     nota = NotaTecnica(
         estagiario_id=est.id,
         total_dias_nao_gozados=total_nao_gozados,
@@ -266,11 +189,12 @@ def gerar_nota(
     db.commit()
     db.refresh(nota)
 
-    # Gerar número oficial
     nota.numero_nota = f"{nota.numero_sequencial}/{date.today().year} - DDVP/DRH/PCPA"
     db.commit()
 
     return RedirectResponse(url="/notas-tecnicas", status_code=303)
+
+
 @app.get("/criar-admin")
 def criar_admin(db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == "admin").first():
@@ -285,3 +209,6 @@ def criar_admin(db: Session = Depends(get_db)):
     return {"mensagem": "Usuário admin criado com sucesso!"}
 
 
+@app.on_event("startup")
+def startup_event():
+    Base.metadata.create_all(bind=engine)
