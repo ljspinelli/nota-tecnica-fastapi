@@ -285,3 +285,4 @@ def debug_db(db: Session = Depends(get_db)):
         return {"status": "ERRO", "detalhes": str(e)}
 
 
+
