@@ -51,8 +51,8 @@ class NotaTecnica(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    # Número sequencial gerado automaticamente pelo banco
-    numero_sequencial = Column(Integer, autoincrement=True, unique=True, index=True)
+    # Número sequencial gerado pelo sistema (não pelo banco)
+    numero_sequencial = Column(Integer, unique=True, index=True)
 
     # Número oficial da nota (ex: "3/2026 - DDVP/DRH/PCPA")
     numero_nota = Column(String, index=True)
@@ -63,6 +63,12 @@ class NotaTecnica(Base):
     data_emissao = Column(Date, nullable=False)
 
     estagiario = relationship("Estagiario", back_populates="notas")
+
+
+# ============================================================
+# USUÁRIO DO SISTEMA
+# ============================================================
+
 class User(Base):
     __tablename__ = "usuarios"
 
@@ -70,5 +76,5 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     senha_hash = Column(String, nullable=False)
 
-    ultimo_acesso = Column(DateTime)
-
+    # Data/hora do último login
+    ultimo_acesso = Column(DateTime, default=None)
