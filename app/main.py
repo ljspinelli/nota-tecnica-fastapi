@@ -259,7 +259,7 @@ def criar_admin(db: Session = Depends(get_db)):
 
         admin = User(
             username="admin",
-            senha_hash=hash_senha("123456"),
+            senha_hash=hash_senha("admin123"),  # ✅ senha curta para evitar erro do bcrypt
             ultimo_acesso=None
         )
         db.add(admin)
@@ -283,4 +283,5 @@ def debug_db(db: Session = Depends(get_db)):
         return {"status": "OK", "mensagem": "Tabela 'usuarios' existe e está acessível."}
     except Exception as e:
         return {"status": "ERRO", "detalhes": str(e)}
+
 
