@@ -272,3 +272,10 @@ def criar_admin(db: Session = Depends(get_db)):
 @app.on_event("startup")
 def startup_event():
     Base.metadata.create_all(bind=engine)
+@app.get("/debug-db")
+def debug_db(db: Session = Depends(get_db)):
+    try:
+        db.query(User).all()
+        return {"status": "OK", "mensagem": "Tabela 'usuarios' existe e está acessível."}
+    except Exception as e:
+        return {"status": "ERRO", "detalhes": str(e)}
