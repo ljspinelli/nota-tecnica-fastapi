@@ -12,7 +12,9 @@ from .services import (
     montar_ciclos_a_partir_form,
     calcular_nao_gozados,
     montar_texto_conclusao_vba,
-    verificar_senha
+    verificar_senha,
+    hash_senha
+
 )
 
 # ============================================================
@@ -281,4 +283,5 @@ def criar_admin(db: Session = Depends(get_db)):
     db.add(admin)
     db.commit()
     return {"mensagem": "Usuário admin criado com sucesso!"}
+
 
