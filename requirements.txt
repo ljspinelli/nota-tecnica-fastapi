@@ -5,3 +5,4 @@ passlib[bcrypt]
 python-multipart
 jinja2
 itsdangerous
+psycopg2-binary
