@@ -7,13 +7,15 @@ from .models import Estagiario, Ciclo
 # ============================================================
 
 def str_to_date_br(valor: str) -> date:
+    """Converte string dd/mm/yyyy para date."""
     return datetime.strptime(valor, "%d/%m/%Y").date()
 
 def dias_entre(inicio: date, fim: date) -> int:
+    """Retorna a quantidade de dias corridos entre duas datas."""
     return (fim - inicio).days
 
 # ============================================================
-# 2. LÓGICA ANTIGA DO SISTEMA
+# 2. LÓGICA ANTIGA DO SISTEMA (LEGADO)
 # ============================================================
 
 def calcular_meses_entre(inicio: date, fim: date) -> int:
@@ -66,6 +68,7 @@ def montar_texto_conclusao(estagiario: Estagiario, periodos: List[dict]) -> str:
 # ============================================================
 
 def calcular_dias_direito(dias_corridos: int) -> int:
+    """Tabela oficial de dias de recesso por dias corridos."""
     if dias_corridos < 180:
         return 0
     elif dias_corridos == 180:
@@ -85,10 +88,12 @@ def calcular_dias_direito(dias_corridos: int) -> int:
     return 0
 
 def montar_ciclos_a_partir_form(contrato_inicio_str: str, contrato_fim_str: str):
+    """Divide o contrato em 1 ou 2 ciclos conforme a regra dos 365 dias."""
     inicio = str_to_date_br(contrato_inicio_str)
     fim = str_to_date_br(contrato_fim_str)
     dias_contrato = dias_entre(inicio, fim)
 
+    # Contratos menores que 365 dias têm apenas 1 ciclo
     if dias_contrato < 364:
         ciclo1_inicio = inicio
         ciclo1_fim = fim
@@ -123,33 +128,16 @@ def montar_ciclos_a_partir_form(contrato_inicio_str: str, contrato_fim_str: str)
     }
 
 def calcular_nao_gozados(dias_direito: int, dias_usufruidos: Optional[int]) -> int:
+    """Calcula dias não gozados considerando o que foi usufruído."""
     if dias_usufruidos is None:
         return dias_direito
     return max(dias_direito - dias_usufruidos, 0)
 
 def montar_texto_conclusao_vba(nome: str, total_nao_gozados: int) -> str:
+    """Texto final da Nota Técnica."""
     return (
         f"Após análise dos períodos aquisitivos e de gozo, "
         f"constata-se que o(a) estagiário(a) {nome} possui "
         f"{total_nao_gozados} dias de recesso não usufruídos, "
         f"fazendo jus ao pagamento correspondente."
     )
-
-# ============================================================
-# 5. AUTENTICAÇÃO (CORRIGIDO COM bcrypt_sha256)
-# ============================================================
-
-from passlib.context import CryptContext
-
-# bcrypt_sha256 evita o limite de 72 bytes
-pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
-
-def hash_senha(senha: str) -> str:
-    if senha is None:
-        raise ValueError("Senha não pode ser nula")
-
-    senha = str(senha)
-    return pwd_context.hash(senha)
-
-def verificar_senha(senha: str, senha_hash: str) -> bool:
-    return pwd_context.verify(senha, senha_hash)
