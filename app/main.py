@@ -21,14 +21,10 @@ from .services import (
 # ============================================================
 
 app = FastAPI()
-
-# Sessão com cookies
 app.add_middleware(SessionMiddleware, secret_key="CHAVE-SECRETA-MUITO-FORTE")
 
-# Templates e arquivos estáticos
 templates = Jinja2Templates(directory="app/templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
 
 # ============================================================
 # DEPENDÊNCIA DO BANCO
@@ -40,7 +36,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 # ============================================================
 # VERIFICAÇÃO DE LOGIN
@@ -57,7 +52,6 @@ def usuario_logado(request: Request, db: Session):
 
     return user
 
-
 # ============================================================
 # LOGIN / LOGOUT
 # ============================================================
@@ -66,10 +60,8 @@ def usuario_logado(request: Request, db: Session):
 def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
-
 @app.post("/login")
 def login(request: Request, username: str = Form(...), senha: str = Form(...), db: Session = Depends(get_db)):
-
     user = db.query(User).filter(User.username == username).first()
 
     if not user or not verificar_senha(senha, user.senha_hash):
@@ -84,12 +76,10 @@ def login(request: Request, username: str = Form(...), senha: str = Form(...), d
 
     return RedirectResponse(url="/admin", status_code=303)
 
-
 @app.get("/logout")
 def logout(request: Request):
     request.session.clear()
     return RedirectResponse(url="/login", status_code=303)
-
 
 # ============================================================
 # MENU INICIAL
@@ -98,7 +88,6 @@ def logout(request: Request):
 @app.get("/", response_class=HTMLResponse)
 def menu_inicial(request: Request):
     return templates.TemplateResponse("menu_inicial.html", {"request": request})
-
 
 # ============================================================
 # PAINEL ADMINISTRATIVO
@@ -130,7 +119,6 @@ def painel_admin(request: Request, db: Session = Depends(get_db)):
         }
     )
 
-
 # ============================================================
 # LISTAGEM DE ESTAGIÁRIOS
 # ============================================================
@@ -140,7 +128,6 @@ def listar_estagiarios(request: Request, db: Session = Depends(get_db)):
     usuario_logado(request, db)
     estagiarios = db.query(Estagiario).all()
     return templates.TemplateResponse("lista_estagiarios.html", {"request": request, "estagiarios": estagiarios})
-
 
 # ============================================================
 # LISTAGEM DE NOTAS TÉCNICAS
@@ -152,7 +139,6 @@ def listar_notas(request: Request, db: Session = Depends(get_db)):
     notas = db.query(NotaTecnica).order_by(NotaTecnica.numero_sequencial.asc()).all()
     return templates.TemplateResponse("lista_notas.html", {"request": request, "notas": notas})
 
-
 # ============================================================
 # FORMULÁRIO DE NOTA TÉCNICA
 # ============================================================
@@ -161,7 +147,6 @@ def listar_notas(request: Request, db: Session = Depends(get_db)):
 def form_nota(request: Request, db: Session = Depends(get_db)):
     usuario_logado(request, db)
     return templates.TemplateResponse("form_nota.html", {"request": request})
-
 
 # ============================================================
 # PROCESSAMENTO DA NOTA TÉCNICA
@@ -180,7 +165,6 @@ def gerar_nota(
     ciclo2_gozados: int = Form(...),
     db: Session = Depends(get_db)
 ):
-
     usuario_logado(request, db)
 
     est = Estagiario(
@@ -246,7 +230,6 @@ def gerar_nota(
 
     return RedirectResponse(url="/notas-tecnicas", status_code=303)
 
-
 # ============================================================
 # CRIAR USUÁRIO ADMIN
 # ============================================================
@@ -259,7 +242,7 @@ def criar_admin(db: Session = Depends(get_db)):
 
         admin = User(
             username="admin",
-            senha_hash=hash_senha("admin123"),  # ✅ senha curta para evitar erro do bcrypt
+            senha_hash=hash_senha("admin123"),
             ultimo_acesso=None
         )
         db.add(admin)
@@ -268,7 +251,6 @@ def criar_admin(db: Session = Depends(get_db)):
     except Exception as e:
         return {"erro": str(e)}
 
-
 # ============================================================
 # CRIAÇÃO AUTOMÁTICA DAS TABELAS NO STARTUP
 # ============================================================
@@ -276,6 +258,7 @@ def criar_admin(db: Session = Depends(get_db)):
 @app.on_event("startup")
 def startup_event():
     Base.metadata.create_all(bind=engine)
+
 @app.get("/debug-db")
 def debug_db(db: Session = Depends(get_db)):
     try:
@@ -283,6 +266,3 @@ def debug_db(db: Session = Depends(get_db)):
         return {"status": "OK", "mensagem": "Tabela 'usuarios' existe e está acessível."}
     except Exception as e:
         return {"status": "ERRO", "detalhes": str(e)}
-
-
-
