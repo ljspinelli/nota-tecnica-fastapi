@@ -34,6 +34,9 @@
             margin-top: 4px;
             box-sizing: border-box;
         }
+        input[readonly] {
+            background-color: #eee;
+        }
         button {
             padding: 10px 20px;
             background-color: #0066cc;
@@ -77,17 +80,55 @@
 
         <label>Encerramento:</label>
         <input type="date" name="fim" required>
+
+        <label>Dias de Contrato:</label>
+        <input type="number" name="dias_contrato" readonly>
     </fieldset>
 
     <fieldset>
         <legend>Período Aquisitivo de Recesso</legend>
         <h3>1° Ciclo</h3>
-        <label>Dias gozados:</label>
+        <label>Início:</label>
+        <input type="date" name="ciclo1_inicio" readonly>
+
+        <label>Final:</label>
+        <input type="date" name="ciclo1_fim" readonly>
+
+        <label>Contagem de Dias:</label>
+        <input type="number" name="ciclo1_dias" readonly>
+
+        <h3>2° Ciclo</h3>
+        <label>Início:</label>
+        <input type="date" name="ciclo2_inicio" readonly>
+
+        <label>Final:</label>
+        <input type="date" name="ciclo2_fim" readonly>
+
+        <label>Contagem de Dias:</label>
+        <input type="number" name="ciclo2_dias" readonly>
+    </fieldset>
+
+    <fieldset>
+        <legend>Período de Gozo de Recesso</legend>
+        <h3>1° Ciclo</h3>
+        <label>Direito de Gozo:</label>
+        <input type="number" name="ciclo1_direito" readonly>
+
+        <label>Usufruídos:</label>
         <input type="number" name="ciclo1_gozados" min="0" value="0" required>
 
-        <h3>2° Ciclo (se houver)</h3>
-        <label>Dias gozados:</label>
+        <label>Não Usufruídos:</label>
+        <input type="number" name="ciclo1_nao_gozados" readonly>
+
+        <h3>2° Ciclo</h3>
+        <label>Direito de Gozo:</label>
+        <input type="number" name="ciclo2_direito" readonly>
+
+        <label>Usufruídos:</label>
         <input type="number" name="ciclo2_gozados" min="0" value="0" required>
+
+        <label>Não Usufruídos:</label>
+        <input type="number" name="ciclo2_nao_gozados" readonly>
     </fieldset>
 
     <button type="submit">Gerar Nota Técnica</button>
