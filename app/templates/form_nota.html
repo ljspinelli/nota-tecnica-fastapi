@@ -136,3 +136,106 @@
 
 </body>
 </html>
+
+<script>
+    // Função para converter string de data em objeto Date
+    function parseDate(value) {
+        return value ? new Date(value + "T00:00:00") : null;
+    }
+
+    // Diferença em dias entre duas datas
+    function diffDays(inicio, fim) {
+        const ms = fim - inicio;
+        return Math.floor(ms / (1000 * 60 * 60 * 24));
+    }
+
+    // Tabela de direito de gozo
+    function calcularDireito(dias) {
+        if (dias < 180) return 0;
+        if (dias === 180) return 15;
+        if (dias <= 210) return 18;
+        if (dias <= 240) return 20;
+        if (dias <= 270) return 23;
+        if (dias <= 300) return 25;
+        if (dias <= 330) return 28;
+        if (dias <= 366) return 30;
+        return 0;
+    }
+
+    // Atualiza tudo quando datas mudam
+    function atualizarCiclos() {
+        const inicio = parseDate(document.querySelector("[name='inicio']").value);
+        const fim = parseDate(document.querySelector("[name='fim']").value);
+
+        if (!inicio || !fim) return;
+
+        // Dias de contrato
+        const diasContrato = diffDays(inicio, fim);
+        document.querySelector("[name='dias_contrato']").value = diasContrato;
+
+        // Definição dos ciclos
+        let ciclo1_inicio = inicio;
+        let ciclo1_fim;
+        let ciclo2_inicio = null;
+        let ciclo2_fim = null;
+
+        if (diasContrato < 364) {
+            ciclo1_fim = fim;
+        } else {
+            ciclo1_fim = new Date(inicio);
+            ciclo1_fim.setDate(ciclo1_fim.getDate() + 364);
+
+            ciclo2_inicio = new Date(ciclo1_fim);
+            ciclo2_inicio.setDate(ciclo2_inicio.getDate() + 1);
+
+            ciclo2_fim = fim;
+        }
+
+        // Preencher campos do ciclo 1
+        document.querySelector("[name='ciclo1_inicio']").value = ciclo1_inicio.toISOString().slice(0, 10);
+        document.querySelector("[name='ciclo1_fim']").value = ciclo1_fim.toISOString().slice(0, 10);
+
+        const diasCiclo1 = diffDays(ciclo1_inicio, ciclo1_fim);
+        document.querySelector("[name='ciclo1_dias']").value = diasCiclo1;
+
+        const direito1 = calcularDireito(diasCiclo1);
+        document.querySelector("[name='ciclo1_direito']").value = direito1;
+
+        // Preencher ciclo 2 (se existir)
+        if (ciclo2_inicio && ciclo2_fim) {
+            document.querySelector("[name='ciclo2_inicio']").value = ciclo2_inicio.toISOString().slice(0, 10);
+            document.querySelector("[name='ciclo2_fim']").value = ciclo2_fim.toISOString().slice(0, 10);
+
+            const diasCiclo2 = diffDays(ciclo2_inicio, ciclo2_fim);
+            document.querySelector("[name='ciclo2_dias']").value = diasCiclo2;
+
+            const direito2 = calcularDireito(diasCiclo2);
+            document.querySelector("[name='ciclo2_direito']").value = direito2;
+        } else {
+            document.querySelector("[name='ciclo2_inicio']").value = "";
+            document.querySelector("[name='ciclo2_fim']").value = "";
+            document.querySelector("[name='ciclo2_dias']").value = "";
+            document.querySelector("[name='ciclo2_direito']").value = "";
+        }
+
+        atualizarNaoUsufruidos();
+    }
+
+    // Atualiza cálculo de "não usufruídos"
+    function atualizarNaoUsufruidos() {
+        const direito1 = Number(document.querySelector("[name='ciclo1_direito']").value || 0);
+        const gozados1 = Number(document.querySelector("[name='ciclo1_gozados']").value || 0);
+        document.querySelector("[name='ciclo1_nao_gozados']").value = Math.max(direito1 - gozados1, 0);
+
+        const direito2 = Number(document.querySelector("[name='ciclo2_direito']").value || 0);
+        const gozados2 = Number(document.querySelector("[name='ciclo2_gozados']").value || 0);
+        document.querySelector("[name='ciclo2_nao_gozados']").value = Math.max(direito2 - gozados2, 0);
+    }
+
+    // Eventos
+    document.querySelector("[name='inicio']").addEventListener("change", atualizarCiclos);
+    document.querySelector("[name='fim']").addEventListener("change", atualizarCiclos);
+
+    document.querySelector("[name='ciclo1_gozados']").addEventListener("input", atualizarNaoUsufruidos);
+    document.querySelector("[name='ciclo2_gozados']").addEventListener("input", atualizarNaoUsufruidos);
+</script>
