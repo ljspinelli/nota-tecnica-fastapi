@@ -1,9 +1,9 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, Text, DateTime
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
 
 # ============================================================
-# ESTAGIÁRIO
+# MODELO: ESTAGIÁRIO
 # ============================================================
 
 class Estagiario(Base):
@@ -14,60 +14,42 @@ class Estagiario(Base):
     ocupacao = Column(String, nullable=False)
     matricula = Column(String, nullable=False)
     processo_pae = Column(String, nullable=False)
-
     data_inicio_contrato = Column(Date, nullable=False)
     data_fim_contrato = Column(Date, nullable=False)
 
-    ciclos = relationship("Ciclo", back_populates="estagiario")
-    notas = relationship("NotaTecnica", back_populates="estagiario")
-
+    ciclos = relationship("Ciclo", back_populates="estagiario", cascade="all, delete-orphan")
+    notas = relationship("NotaTecnica", back_populates="estagiario", cascade="all, delete-orphan")
 
 # ============================================================
-# CICLO DE RECESSO
+# MODELO: CICLO DE RECESSO
 # ============================================================
 
 class Ciclo(Base):
     __tablename__ = "ciclos"
 
     id = Column(Integer, primary_key=True, index=True)
-    estagiario_id = Column(Integer, ForeignKey("estagiarios.id"))
+    estagiario_id = Column(Integer, ForeignKey("estagiarios.id"), nullable=False)
 
     data_inicio = Column(Date, nullable=False)
     data_fim = Column(Date, nullable=False)
-
-    dias_gozados = Column(Integer, default=0)
-    dias_direito = Column(Integer, default=0)
+    dias_gozados = Column(Integer, nullable=False)
+    dias_direito = Column(Integer, nullable=False)
 
     estagiario = relationship("Estagiario", back_populates="ciclos")
 
-
 # ============================================================
-# NOTA TÉCNICA
+# MODELO: NOTA TÉCNICA
 # ============================================================
 
 class NotaTecnica(Base):
     __tablename__ = "notas_tecnicas"
 
     id = Column(Integer, primary_key=True, index=True)
-    numero_sequencial = Column(Integer, unique=True, index=True)
-    numero_nota = Column(String, index=True)
+    estagiario_id = Column(Integer, ForeignKey("estagiarios.id"), nullable=False)
 
-    estagiario_id = Column(Integer, ForeignKey("estagiarios.id"))
+    numero_sequencial = Column(Integer, autoincrement=True)
     total_dias_nao_gozados = Column(Integer, nullable=False)
-    texto_conclusao = Column(Text, nullable=False)
+    texto_conclusao = Column(String, nullable=False)
     data_emissao = Column(Date, nullable=False)
 
     estagiario = relationship("Estagiario", back_populates="notas")
-
-
-# ============================================================
-# USUÁRIO DO SISTEMA
-# ============================================================
-
-class User(Base):
-    __tablename__ = "usuarios"
-
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, nullable=False)
-    senha_hash = Column(String, nullable=False)
-    ultimo_acesso = Column(DateTime, nullable=True)  # ✅ corrigido para aceitar None
