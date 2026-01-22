@@ -155,22 +155,29 @@
 ============================================================ -->
 <script>
 
-    /* ============================
-       MÁSCARA: MATRÍCULA
-    ============================ */
-    function mascaraMatricula() {
-        const campo = document.querySelector("[name='matricula']");
-        let v = campo.value.replace(/\D/g, "");
+  /* ============================
+   MÁSCARA: MATRÍCULA
+   Formato: 123456789012/34
+============================ */
+function mascaraMatricula() {
+    const campo = document.querySelector("[name='matricula']");
+    let v = campo.value.replace(/\D/g, ""); // só números
 
-        if (v.length > 6) {
-            v = v.slice(0, 6) + "/" + v.slice(6, 8);
-        }
-
-        campo.value = v;
+    // limita a 14 dígitos no total
+    if (v.length > 14) {
+        v = v.slice(0, 14);
     }
 
-    document.querySelector("[name='matricula']")
-        .addEventListener("input", mascaraMatricula);
+    if (v.length > 12) {
+        // 12 primeiros dígitos + "/" + até 2 dígitos finais
+        v = v.slice(0, 12) + "/" + v.slice(12, 14);
+    }
+
+    campo.value = v;
+}
+
+document.querySelector("[name='matricula']")
+    .addEventListener("input", mascaraMatricula);
 
 
     /* ============================
