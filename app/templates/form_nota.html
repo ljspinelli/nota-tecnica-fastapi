@@ -2,49 +2,96 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerar Nota Técnica</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Formulário de Nota Técnica</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f9f9f9;
+        }
+        h2, h3 {
+            color: #333;
+        }
+        fieldset {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 30px;
+            background-color: #fff;
+        }
+        legend {
+            font-weight: bold;
+            padding: 0 10px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="text"],
+        input[type="date"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #004c99;
+        }
+    </style>
 </head>
 <body>
 
-<h2>Gerar Nota Técnica</h2>
+<h2>Emissão de Nota Técnica de Recesso</h2>
 
 <form action="/nota-tecnica/gerar" method="post">
 
-    <label>Nome do Estagiário:</label>
-    <input type="text" name="nome" required>
+    <fieldset>
+        <legend>Dados do Estagiário(a)</legend>
+        <label>Nome:</label>
+        <input type="text" name="nome" required>
 
-    <label>Ocupação:</label>
-    <input type="text" name="ocupacao" required>
+        <label>Ocupação:</label>
+        <input type="text" name="ocupacao" required>
 
-    <label>Matrícula:</label>
-    <input type="text" name="matricula" required>
+        <label>Matrícula:</label>
+        <input type="text" name="matricula" required>
 
-    <label>Processo PAE:</label>
-    <input type="text" name="processo_pae" required>
+        <label>Processo PAE:</label>
+        <input type="text" name="processo_pae" required>
 
-    <label>Data de Início do Contrato:</label>
-    <input type="date" name="inicio" required>
+        <label>Assunto:</label>
+        <input type="text" name="assunto" value="Pagamento de Recesso Não Usufruído">
+    </fieldset>
 
-    <label>Data de Fim do Contrato:</label>
-    <input type="date" name="fim" required>
+    <fieldset>
+        <legend>Dados do Contrato</legend>
+        <label>Início:</label>
+        <input type="date" name="inicio" required>
 
-    <hr>
+        <label>Encerramento:</label>
+        <input type="date" name="fim" required>
+    </fieldset>
 
-    <h3>Ciclo 1</h3>
-    <label>Dias gozados no ciclo 1:</label>
-    <input type="number" name="ciclo1_gozados" min="0" value="0" required>
+    <fieldset>
+        <legend>Período Aquisitivo de Recesso</legend>
+        <h3>1° Ciclo</h3>
+        <label>Dias gozados:</label>
+        <input type="number" name="ciclo1_gozados" min="0" value="0" required>
 
-    <h3>Ciclo 2 (se existir)</h3>
-    <label>Dias gozados no ciclo 2:</label>
-    <input type="number" name="ciclo2_gozados" min="0" value="0" required>
+        <h3>2° Ciclo (se houver)</h3>
+        <label>Dias gozados:</label>
+        <input type="number" name="ciclo2_gozados" min="0" value="0" required>
+    </fieldset>
 
-    <br><br>
     <button type="submit">Gerar Nota Técnica</button>
 </form>
-
-<br>
-<a href="/admin">Voltar ao Painel</a>
 
 </body>
 </html>
