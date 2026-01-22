@@ -55,8 +55,12 @@
 
 <form action="/nota-tecnica/gerar" method="post">
 
+    <!-- ============================
+         DADOS DO ESTAGIÁRIO
+    ============================ -->
     <fieldset>
         <legend>Dados do Estagiário(a)</legend>
+
         <label>Nome:</label>
         <input type="text" name="nome" required>
 
@@ -73,8 +77,12 @@
         <input type="text" name="assunto" value="Pagamento de Recesso Não Usufruído">
     </fieldset>
 
+    <!-- ============================
+         DADOS DO CONTRATO
+    ============================ -->
     <fieldset>
         <legend>Dados do Contrato</legend>
+
         <label>Início:</label>
         <input type="date" name="inicio" required>
 
@@ -85,8 +93,12 @@
         <input type="number" name="dias_contrato" readonly>
     </fieldset>
 
+    <!-- ============================
+         PERÍODO AQUISITIVO
+    ============================ -->
     <fieldset>
         <legend>Período Aquisitivo de Recesso</legend>
+
         <h3>1° Ciclo</h3>
         <label>Início:</label>
         <input type="date" name="ciclo1_inicio" readonly>
@@ -108,8 +120,12 @@
         <input type="number" name="ciclo2_dias" readonly>
     </fieldset>
 
+    <!-- ============================
+         PERÍODO DE GOZO
+    ============================ -->
     <fieldset>
         <legend>Período de Gozo de Recesso</legend>
+
         <h3>1° Ciclo</h3>
         <label>Direito de Gozo:</label>
         <input type="number" name="ciclo1_direito" readonly>
@@ -134,22 +150,59 @@
     <button type="submit">Gerar Nota Técnica</button>
 </form>
 
-</body>
-</html>
-
+<!-- ============================================================
+     SCRIPT COMPLETO (MÁSCARAS + CÁLCULOS AUTOMÁTICOS)
+============================================================ -->
 <script>
-    // Função para converter string de data em objeto Date
+
+    /* ============================
+       MÁSCARA: MATRÍCULA
+    ============================ */
+    function mascaraMatricula() {
+        const campo = document.querySelector("[name='matricula']");
+        let v = campo.value.replace(/\D/g, "");
+
+        if (v.length > 6) {
+            v = v.slice(0, 6) + "/" + v.slice(6, 8);
+        }
+
+        campo.value = v;
+    }
+
+    document.querySelector("[name='matricula']")
+        .addEventListener("input", mascaraMatricula);
+
+
+    /* ============================
+       MÁSCARA: PROCESSO PAE
+    ============================ */
+    function mascaraProcesso() {
+        const campo = document.querySelector("[name='processo_pae']");
+        let v = campo.value.replace(/\D/g, "");
+
+        if (v.length > 4) {
+            v = v.slice(0, 4) + "/" + v.slice(4, 14);
+        }
+
+        campo.value = v;
+    }
+
+    document.querySelector("[name='processo_pae']")
+        .addEventListener("input", mascaraProcesso);
+
+
+    /* ============================
+       FUNÇÕES DE CÁLCULO
+    ============================ */
+
     function parseDate(value) {
         return value ? new Date(value + "T00:00:00") : null;
     }
 
-    // Diferença em dias entre duas datas
     function diffDays(inicio, fim) {
-        const ms = fim - inicio;
-        return Math.floor(ms / (1000 * 60 * 60 * 24));
+        return Math.floor((fim - inicio) / (1000 * 60 * 60 * 24));
     }
 
-    // Tabela de direito de gozo
     function calcularDireito(dias) {
         if (dias < 180) return 0;
         if (dias === 180) return 15;
@@ -162,18 +215,15 @@
         return 0;
     }
 
-    // Atualiza tudo quando datas mudam
     function atualizarCiclos() {
         const inicio = parseDate(document.querySelector("[name='inicio']").value);
         const fim = parseDate(document.querySelector("[name='fim']").value);
 
         if (!inicio || !fim) return;
 
-        // Dias de contrato
         const diasContrato = diffDays(inicio, fim);
         document.querySelector("[name='dias_contrato']").value = diasContrato;
 
-        // Definição dos ciclos
         let ciclo1_inicio = inicio;
         let ciclo1_fim;
         let ciclo2_inicio = null;
@@ -191,7 +241,6 @@
             ciclo2_fim = fim;
         }
 
-        // Preencher campos do ciclo 1
         document.querySelector("[name='ciclo1_inicio']").value = ciclo1_inicio.toISOString().slice(0, 10);
         document.querySelector("[name='ciclo1_fim']").value = ciclo1_fim.toISOString().slice(0, 10);
 
@@ -201,7 +250,6 @@
         const direito1 = calcularDireito(diasCiclo1);
         document.querySelector("[name='ciclo1_direito']").value = direito1;
 
-        // Preencher ciclo 2 (se existir)
         if (ciclo2_inicio && ciclo2_fim) {
             document.querySelector("[name='ciclo2_inicio']").value = ciclo2_inicio.toISOString().slice(0, 10);
             document.querySelector("[name='ciclo2_fim']").value = ciclo2_fim.toISOString().slice(0, 10);
@@ -221,7 +269,6 @@
         atualizarNaoUsufruidos();
     }
 
-    // Atualiza cálculo de "não usufruídos"
     function atualizarNaoUsufruidos() {
         const direito1 = Number(document.querySelector("[name='ciclo1_direito']").value || 0);
         const gozados1 = Number(document.querySelector("[name='ciclo1_gozados']").value || 0);
@@ -232,10 +279,13 @@
         document.querySelector("[name='ciclo2_nao_gozados']").value = Math.max(direito2 - gozados2, 0);
     }
 
-    // Eventos
     document.querySelector("[name='inicio']").addEventListener("change", atualizarCiclos);
     document.querySelector("[name='fim']").addEventListener("change", atualizarCiclos);
 
     document.querySelector("[name='ciclo1_gozados']").addEventListener("input", atualizarNaoUsufruidos);
     document.querySelector("[name='ciclo2_gozados']").addEventListener("input", atualizarNaoUsufruidos);
+
 </script>
+
+</body>
+</html>
