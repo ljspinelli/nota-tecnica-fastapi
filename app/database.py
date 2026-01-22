@@ -1,4 +1,3 @@
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -6,41 +5,31 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # CONFIGURAÇÃO DO BANCO DE DADOS
 # ============================================================
 
-# Render: usa a variável de ambiente DATABASE_URL
-# Local: usa SQLite automaticamente
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./database.db")
+# Render fornece a URL do banco via variável de ambiente DATABASE_URL
+# Se estiver rodando localmente, você pode definir manualmente:
+# export DATABASE_URL="postgresql://usuario:senha@localhost:5432/nota_tecnica"
+
+import os
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    # Fallback para desenvolvimento local
+    DATABASE_URL = "sqlite:///./local.db"
+
+# Para Postgres no Render, precisamos ajustar a URL se vier com "postgres://"
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # ============================================================
-# ENGINE
+# ENGINE E SESSÃO
 # ============================================================
 
-if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
-    # SQLite (uso local)
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        echo=False,
-    )
-else:
-    # PostgreSQL (Render)
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        pool_pre_ping=True,
-        echo=False,
-    )
-
-# ============================================================
-# SESSÃO DO BANCO
-# ============================================================
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 )
 
-# ============================================================
-# BASE DO SQLALCHEMY
-# ============================================================
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Base para os modelos
 Base = declarative_base()
