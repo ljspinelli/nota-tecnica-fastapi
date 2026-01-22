@@ -1,19 +1,16 @@
-from fastapi import FastAPI, Request, Form, Depends, HTTPException
+from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
 from datetime import datetime, date
 
 from .database import engine, SessionLocal
-from .models import Base, Estagiario, Ciclo, NotaTecnica, User
+from .models import Base, Estagiario, Ciclo, NotaTecnica
 from .services import (
     montar_ciclos_a_partir_form,
     calcular_nao_gozados,
-    montar_texto_conclusao_vba,
-    verificar_senha,
-    hash_senha
+    montar_texto_conclusao_vba
 )
 
 # ============================================================
@@ -21,7 +18,6 @@ from .services import (
 # ============================================================
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key="CHAVE-SECRETA-MUITO-FORTE")
 
 templates = Jinja2Templates(directory="app/templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -38,50 +34,6 @@ def get_db():
         db.close()
 
 # ============================================================
-# VERIFICAÇÃO DE LOGIN
-# ============================================================
-
-def usuario_logado(request: Request, db: Session):
-    user_id = request.session.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Não autorizado")
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Não autorizado")
-
-    return user
-
-# ============================================================
-# LOGIN / LOGOUT
-# ============================================================
-
-@app.get("/login", response_class=HTMLResponse)
-def login_form(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-@app.post("/login")
-def login(request: Request, username: str = Form(...), senha: str = Form(...), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == username).first()
-
-    if not user or not verificar_senha(senha, user.senha_hash):
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "erro": "Usuário ou senha inválidos"}
-        )
-
-    request.session["user_id"] = user.id
-    user.ultimo_acesso = datetime.now()
-    db.commit()
-
-    return RedirectResponse(url="/admin", status_code=303)
-
-@app.get("/logout")
-def logout(request: Request):
-    request.session.clear()
-    return RedirectResponse(url="/login", status_code=303)
-
-# ============================================================
 # MENU INICIAL
 # ============================================================
 
@@ -90,13 +42,11 @@ def menu_inicial(request: Request):
     return templates.TemplateResponse("menu_inicial.html", {"request": request})
 
 # ============================================================
-# PAINEL ADMINISTRATIVO
+# PAINEL PRINCIPAL (SEM LOGIN)
 # ============================================================
 
 @app.get("/admin", response_class=HTMLResponse)
 def painel_admin(request: Request, db: Session = Depends(get_db)):
-    usuario_logado(request, db)
-
     total_estagiarios = db.query(Estagiario).count()
     total_notas = db.query(NotaTecnica).count()
     total_dias_pagos = sum(n.total_dias_nao_gozados for n in db.query(NotaTecnica).all())
@@ -125,7 +75,6 @@ def painel_admin(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/estagiarios", response_class=HTMLResponse)
 def listar_estagiarios(request: Request, db: Session = Depends(get_db)):
-    usuario_logado(request, db)
     estagiarios = db.query(Estagiario).all()
     return templates.TemplateResponse("lista_estagiarios.html", {"request": request, "estagiarios": estagiarios})
 
@@ -135,7 +84,6 @@ def listar_estagiarios(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/notas-tecnicas", response_class=HTMLResponse)
 def listar_notas(request: Request, db: Session = Depends(get_db)):
-    usuario_logado(request, db)
     notas = db.query(NotaTecnica).order_by(NotaTecnica.numero_sequencial.asc()).all()
     return templates.TemplateResponse("lista_notas.html", {"request": request, "notas": notas})
 
@@ -144,8 +92,7 @@ def listar_notas(request: Request, db: Session = Depends(get_db)):
 # ============================================================
 
 @app.get("/nota-tecnica/form", response_class=HTMLResponse)
-def form_nota(request: Request, db: Session = Depends(get_db)):
-    usuario_logado(request, db)
+def form_nota(request: Request):
     return templates.TemplateResponse("form_nota.html", {"request": request})
 
 # ============================================================
@@ -165,8 +112,6 @@ def gerar_nota(
     ciclo2_gozados: int = Form(...),
     db: Session = Depends(get_db)
 ):
-    usuario_logado(request, db)
-
     est = Estagiario(
         nome=nome,
         ocupacao=ocupacao,
@@ -231,27 +176,6 @@ def gerar_nota(
     return RedirectResponse(url="/notas-tecnicas", status_code=303)
 
 # ============================================================
-# CRIAR USUÁRIO ADMIN
-# ============================================================
-
-@app.get("/criar-admin")
-def criar_admin(db: Session = Depends(get_db)):
-    try:
-        if db.query(User).filter(User.username == "admin").first():
-            return {"mensagem": "Usuário admin já existe."}
-
-        admin = User(
-            username="admin",
-            senha_hash=hash_senha("admin123"),
-            ultimo_acesso=None
-        )
-        db.add(admin)
-        db.commit()
-        return {"mensagem": "Usuário admin criado com sucesso!"}
-    except Exception as e:
-        return {"erro": str(e)}
-
-# ============================================================
 # CRIAÇÃO AUTOMÁTICA DAS TABELAS NO STARTUP
 # ============================================================
 
@@ -259,10 +183,14 @@ def criar_admin(db: Session = Depends(get_db)):
 def startup_event():
     Base.metadata.create_all(bind=engine)
 
+# ============================================================
+# DEBUG OPCIONAL
+# ============================================================
+
 @app.get("/debug-db")
 def debug_db(db: Session = Depends(get_db)):
     try:
-        db.query(User).all()
-        return {"status": "OK", "mensagem": "Tabela 'usuarios' existe e está acessível."}
+        db.query(Estagiario).all()
+        return {"status": "OK", "mensagem": "Banco acessível."}
     except Exception as e:
         return {"status": "ERRO", "detalhes": str(e)}
