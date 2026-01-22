@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerar Nota Técnica</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h2>Gerar Nota Técnica</h2>
+
+<form action="/nota-tecnica/gerar" method="post">
+
+    <label>Nome do Estagiário:</label>
+    <input type="text" name="nome" required>
+
+    <label>Ocupação:</label>
+    <input type="text" name="ocupacao" required>
+
+    <label>Matrícula:</label>
+    <input type="text" name="matricula" required>
+
+    <label>Processo PAE:</label>
+    <input type="text" name="processo_pae" required>
+
+    <label>Data de Início do Contrato:</label>
+    <input type="date" name="inicio" required>
+
+    <label>Data de Fim do Contrato:</label>
+    <input type="date" name="fim" required>
+
+    <hr>
+
+    <h3>Ciclo 1</h3>
+    <label>Dias gozados no ciclo 1:</label>
+    <input type="number" name="ciclo1_gozados" min="0" value="0" required>
+
+    <h3>Ciclo 2 (se existir)</h3>
+    <label>Dias gozados no ciclo 2:</label>
+    <input type="number" name="ciclo2_gozados" min="0" value="0" required>
+
+    <br><br>
+    <button type="submit">Gerar Nota Técnica</button>
+</form>
+
+<br>
+<a href="/admin">Voltar ao Painel</a>
+
+</body>
+</html>
