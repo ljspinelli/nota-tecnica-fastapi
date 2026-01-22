@@ -155,28 +155,29 @@
 ============================================================ -->
 <script>
 
-  /* ============================
+ /* ============================
    MÁSCARA: MATRÍCULA
-   Regra:
-   - Qualquer quantidade de dígitos antes da "/"
-   - Máx. 2 dígitos depois da "/"
+   Regras:
+   - Só números e "/"
+   - Apenas uma "/"
+   - Máx. 2 dígitos após a "/"
 ============================ */
 function mascaraMatricula() {
     const campo = document.querySelector("[name='matricula']");
     let v = campo.value;
 
-    // Remove tudo que não é dígito ou "/"
+    // Remove tudo que não for número ou "/"
     v = v.replace(/[^0-9/]/g, "");
 
-    // Garante que só exista uma "/"
+    // Garante que só exista UMA barra
     const partes = v.split("/");
-    const antes = partes[0] || "";
-    let depois = partes[1] || "";
+    const antes = partes[0].replace(/\D/g, ""); // só números antes da barra
+    let depois = partes[1] ? partes[1].replace(/\D/g, "") : "";
 
-    // Limita a 2 dígitos depois da "/"
-    depois = depois.replace(/\D/g, "").slice(0, 2);
+    // Limita a 2 dígitos após a barra
+    depois = depois.slice(0, 2);
 
-    // Remonta o valor
+    // Remonta o valor final
     v = depois.length > 0 ? `${antes}/${depois}` : antes;
 
     campo.value = v;
@@ -184,7 +185,6 @@ function mascaraMatricula() {
 
 document.querySelector("[name='matricula']")
     .addEventListener("input", mascaraMatricula);
-
 
     /* ============================
        MÁSCARA: PROCESSO PAE
