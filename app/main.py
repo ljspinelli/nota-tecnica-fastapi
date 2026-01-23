@@ -212,12 +212,30 @@ def gerar_nota(
     ocupacao: str = Form(...),
     matricula: str = Form(...),
     processo_pae: str = Form(...),
+    assunto: str = Form(...),
     inicio: str = Form(...),
     fim: str = Form(...),
+    dias_contrato: int = Form(...),
+
+    ciclo1_inicio: str = Form(...),
+    ciclo1_fim: str = Form(...),
+    ciclo1_dias: int = Form(...),
+    ciclo1_direito: int = Form(...),
     ciclo1_gozados: int = Form(...),
+    ciclo1_nao_gozados: int = Form(...),
+
+    ciclo2_inicio: str = Form(""),
+    ciclo2_fim: str = Form(""),
+    ciclo2_dias: str = Form(""),
+    ciclo2_direito: str = Form(""),
     ciclo2_gozados: int = Form(...),
+    ciclo2_nao_gozados: str = Form(""),
+
     db: Session = Depends(get_db)
 ):
+    # ============================================================
+    # 1. Criar Estagiário
+    # ============================================================
     est = Estagiario(
         nome=nome,
         ocupacao=ocupacao,
@@ -230,39 +248,45 @@ def gerar_nota(
     db.commit()
     db.refresh(est)
 
-    info = montar_ciclos_a_partir_form(inicio, fim)
-    ciclos_criados = []
-
-    c1 = info["ciclo1"]
+    # ============================================================
+    # 2. Criar Ciclo 1
+    # ============================================================
     ciclo1 = Ciclo(
         estagiario_id=est.id,
-        data_inicio=c1["inicio"],
-        data_fim=c1["fim"],
+        data_inicio=datetime.strptime(ciclo1_inicio, "%Y-%m-%d").date(),
+        data_fim=datetime.strptime(ciclo1_fim, "%Y-%m-%d").date(),
         dias_gozados=ciclo1_gozados,
-        dias_direito=c1["dias_direito"],
+        dias_direito=ciclo1_direito,
     )
     db.add(ciclo1)
-    ciclos_criados.append((c1, ciclo1_gozados))
 
-    c2 = info["ciclo2"]
-    if c2["inicio"] and c2["fim"]:
+    # ============================================================
+    # 3. Criar Ciclo 2 (se existir)
+    # ============================================================
+    ciclos = [ciclo1]
+    if ciclo2_inicio and ciclo2_fim:
         ciclo2 = Ciclo(
             estagiario_id=est.id,
-            data_inicio=c2["inicio"],
-            data_fim=c2["fim"],
+            data_inicio=datetime.strptime(ciclo2_inicio, "%Y-%m-%d").date(),
+            data_fim=datetime.strptime(ciclo2_fim, "%Y-%m-%d").date(),
             dias_gozados=ciclo2_gozados,
-            dias_direito=c2["dias_direito"],
+            dias_direito=int(ciclo2_direito),
         )
         db.add(ciclo2)
-        ciclos_criados.append((c2, ciclo2_gozados))
+        ciclos.append(ciclo2)
 
     db.commit()
 
-    total_nao_gozados = sum(
-        calcular_nao_gozados(c["dias_direito"], gozados)
-        for c, gozados in ciclos_criados
-    )
+    # ============================================================
+    # 4. Total de não usufruídos (já calculado)
+    # ============================================================
+    total_nao_gozados = ciclo1_nao_gozados
+    if ciclo2_nao_gozados != "":
+        total_nao_gozados += int(ciclo2_nao_gozados)
 
+    # ============================================================
+    # 5. Criar Nota Técnica
+    # ============================================================
     nota = NotaTecnica(
         estagiario_id=est.id,
         total_dias_nao_gozados=total_nao_gozados,
@@ -276,11 +300,17 @@ def gerar_nota(
     db.commit()
     db.refresh(nota)
 
+    # Número sequencial
     nota.numero_nota = f"{nota.numero_sequencial}/{date.today().year} - DDVP/DRH/PCPA"
     db.commit()
 
-    return RedirectResponse(url="/notas-tecnicas", status_code=303)
-
+    # ============================================================
+    # 6. Redirecionar para a página final da Nota Técnica
+    # ============================================================
+    return RedirectResponse(
+        url=f"/nota-tecnica/{nota.id}/visualizar",
+        status_code=303
+    )
 # ============================================================
 # CRIAÇÃO AUTOMÁTICA DAS TABELAS NO STARTUP
 # ============================================================
@@ -300,3 +330,4 @@ def debug_db(db: Session = Depends(get_db)):
         return {"status": "OK", "mensagem": "Banco acessível."}
     except Exception as e:
         return {"status": "ERRO", "detalhes": str(e)}
+
