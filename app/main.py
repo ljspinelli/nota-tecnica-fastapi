@@ -294,7 +294,7 @@ def gerar_nota(
             nome=est.nome,
             total_nao_gozados=total_nao_gozados
         ),
-        assunto=assunto,
+        #assunto=assunto,
         data_emissao=date.today(),
     )
     db.add(nota)
@@ -352,3 +352,4 @@ def visualizar_nota(nota_id: int, request: Request, db: Session = Depends(get_db
             "ciclos": ciclos
         }
     )
+
