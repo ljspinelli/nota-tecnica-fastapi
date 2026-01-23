@@ -294,6 +294,7 @@ def gerar_nota(
             nome=est.nome,
             total_nao_gozados=total_nao_gozados
         ),
+        assunto=assunto,
         data_emissao=date.today(),
     )
     db.add(nota)
@@ -311,6 +312,7 @@ def gerar_nota(
         url=f"/nota-tecnica/{nota.id}/visualizar",
         status_code=303
     )
+
 # ============================================================
 # CRIAÇÃO AUTOMÁTICA DAS TABELAS NO STARTUP
 # ============================================================
@@ -331,6 +333,10 @@ def debug_db(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "ERRO", "detalhes": str(e)}
 
+# ============================================================
+# VISUALIZAÇÃO FINAL DA NOTA TÉCNICA
+# ============================================================
+
 @app.get("/nota-tecnica/{nota_id}/visualizar", response_class=HTMLResponse)
 def visualizar_nota(nota_id: int, request: Request, db: Session = Depends(get_db)):
     nota = db.query(NotaTecnica).filter(NotaTecnica.id == nota_id).first()
@@ -346,4 +352,3 @@ def visualizar_nota(nota_id: int, request: Request, db: Session = Depends(get_db
             "ciclos": ciclos
         }
     )
-
