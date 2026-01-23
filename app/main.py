@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from .database import engine, SessionLocal
 from .models import Base, Estagiario, Ciclo, NotaTecnica
@@ -96,7 +96,113 @@ def form_nota(request: Request):
     return templates.TemplateResponse("form_nota.html", {"request": request})
 
 # ============================================================
-# PROCESSAMENTO DA NOTA TÉCNICA
+# FUNÇÕES AUXILIARES PARA A PRÉVIA
+# ============================================================
+
+def calcular_direito(dias):
+    if dias < 180:
+        return 0
+    if dias == 180:
+        return 15
+    if dias <= 210:
+        return 18
+    if dias <= 240:
+        return 20
+    if dias <= 270:
+        return 23
+    if dias <= 300:
+        return 25
+    if dias <= 330:
+        return 28
+    if dias <= 366:
+        return 30
+    return 0
+
+
+def processar_dados_formulario(form):
+    dados = {}
+
+    # Dados básicos
+    dados["nome"] = form["nome"]
+    dados["ocupacao"] = form["ocupacao"]
+    dados["matricula"] = form["matricula"]
+    dados["processo_pae"] = form["processo_pae"]
+    dados["assunto"] = form.get("assunto", "Pagamento de Recesso Não Usufruído")
+
+    # Datas
+    inicio = datetime.strptime(form["inicio"], "%Y-%m-%d").date()
+    fim = datetime.strptime(form["fim"], "%Y-%m-%d").date()
+
+    dados["inicio"] = form["inicio"]
+    dados["fim"] = form["fim"]
+
+    # Dias de contrato
+    dias_contrato = (fim - inicio).days
+    dados["dias_contrato"] = dias_contrato
+
+    # ============================================================
+    # CÁLCULO DOS CICLOS
+    # ============================================================
+
+    ciclo1_inicio = inicio
+    if dias_contrato < 364:
+        ciclo1_fim = fim
+        ciclo2_inicio = None
+        ciclo2_fim = None
+    else:
+        ciclo1_fim = inicio + timedelta(days=364)
+        ciclo2_inicio = ciclo1_fim + timedelta(days=1)
+        ciclo2_fim = fim
+
+    dados["ciclo1_inicio"] = ciclo1_inicio.strftime("%Y-%m-%d")
+    dados["ciclo1_fim"] = ciclo1_fim.strftime("%Y-%m-%d")
+    dados["ciclo1_dias"] = (ciclo1_fim - ciclo1_inicio).days
+    dados["ciclo1_direito"] = calcular_direito(dados["ciclo1_dias"])
+
+    if ciclo2_inicio:
+        dados["ciclo2_inicio"] = ciclo2_inicio.strftime("%Y-%m-%d")
+        dados["ciclo2_fim"] = ciclo2_fim.strftime("%Y-%m-%d")
+        dados["ciclo2_dias"] = (ciclo2_fim - ciclo2_inicio).days
+        dados["ciclo2_direito"] = calcular_direito(dados["ciclo2_dias"])
+    else:
+        dados["ciclo2_inicio"] = ""
+        dados["ciclo2_fim"] = ""
+        dados["ciclo2_dias"] = ""
+        dados["ciclo2_direito"] = ""
+
+    # ============================================================
+    # GOZO
+    # ============================================================
+
+    dados["ciclo1_gozados"] = int(form["ciclo1_gozados"])
+    dados["ciclo1_nao_gozados"] = max(
+        dados["ciclo1_direito"] - dados["ciclo1_gozados"], 0
+    )
+
+    dados["ciclo2_gozados"] = int(form["ciclo2_gozados"])
+    dados["ciclo2_nao_gozados"] = (
+        max(dados["ciclo2_direito"] - dados["ciclo2_gozados"], 0)
+        if dados["ciclo2_direito"] != "" else ""
+    )
+
+    return dados
+
+# ============================================================
+# ROTA DE PRÉVIA DA NOTA TÉCNICA
+# ============================================================
+
+@app.post("/nota-tecnica/preview", response_class=HTMLResponse)
+async def preview_nota(request: Request):
+    form = await request.form()
+    dados = processar_dados_formulario(form)
+
+    return templates.TemplateResponse(
+        "preview_nota.html",
+        {"request": request, "dados": dados}
+    )
+
+# ============================================================
+# PROCESSAMENTO FINAL DA NOTA TÉCNICA (GRAVAÇÃO)
 # ============================================================
 
 @app.post("/nota-tecnica/gerar")
