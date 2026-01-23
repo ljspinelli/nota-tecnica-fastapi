@@ -331,3 +331,19 @@ def debug_db(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "ERRO", "detalhes": str(e)}
 
+@app.get("/nota-tecnica/{nota_id}/visualizar", response_class=HTMLResponse)
+def visualizar_nota(nota_id: int, request: Request, db: Session = Depends(get_db)):
+    nota = db.query(NotaTecnica).filter(NotaTecnica.id == nota_id).first()
+    est = db.query(Estagiario).filter(Estagiario.id == nota.estagiario_id).first()
+    ciclos = db.query(Ciclo).filter(Ciclo.estagiario_id == est.id).all()
+
+    return templates.TemplateResponse(
+        "nota_final.html",
+        {
+            "request": request,
+            "nota": nota,
+            "est": est,
+            "ciclos": ciclos
+        }
+    )
+
