@@ -50,7 +50,6 @@ class NotaTecnica(Base):
     numero_sequencial = Column(Integer, autoincrement=True)
     total_dias_nao_gozados = Column(Integer, nullable=False)
     texto_conclusao = Column(String, nullable=False)
-    assunto = Column(String, nullable=False)
     data_emissao = Column(Date, nullable=False)
 
     estagiario = relationship("Estagiario", back_populates="notas")
