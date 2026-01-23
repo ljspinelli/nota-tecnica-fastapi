@@ -311,7 +311,6 @@ def gerar_nota(
         url=f"/nota-tecnica/{nota.id}/visualizar",
         status_code=303
     )
-
 # ============================================================
 # CRIAÇÃO AUTOMÁTICA DAS TABELAS NO STARTUP
 # ============================================================
@@ -331,10 +330,6 @@ def debug_db(db: Session = Depends(get_db)):
         return {"status": "OK", "mensagem": "Banco acessível."}
     except Exception as e:
         return {"status": "ERRO", "detalhes": str(e)}
-
-# ============================================================
-# VISUALIZAÇÃO FINAL DA NOTA TÉCNICA
-# ============================================================
 
 @app.get("/nota-tecnica/{nota_id}/visualizar", response_class=HTMLResponse)
 def visualizar_nota(nota_id: int, request: Request, db: Session = Depends(get_db)):
