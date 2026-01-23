@@ -6,117 +6,236 @@
 
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Times New Roman", serif;
             margin: 40px;
-            background-color: #f5f5f5;
+            background-color: #ffffff;
+            color: #000;
         }
 
-        .container {
-            background: #fff;
-            padding: 30px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+        .cabecalho {
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 30px;
         }
 
         h2 {
             text-align: center;
+            margin-top: 10px;
             margin-bottom: 30px;
+            font-size: 18px;
+            text-transform: uppercase;
         }
 
-        .secao {
+        table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 25px;
+            font-size: 14px;
         }
 
-        .secao h3 {
-            margin-bottom: 10px;
-            color: #444;
+        table th, table td {
+            border: 1px solid #000;
+            padding: 6px;
         }
 
-        .linha {
-            margin-bottom: 6px;
+        table th {
+            background-color: #f2f2f2;
+            text-align: center;
         }
 
-        .label {
+        .secao-titulo {
             font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-size: 16px;
         }
 
-        .conclusao {
-            margin-top: 20px;
-            padding: 15px;
-            background: #eef4ff;
-            border-left: 4px solid #0066cc;
+        .texto {
+            text-align: justify;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
         }
 
-        .btn-voltar {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #777;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
+        .assinaturas {
+            margin-top: 40px;
+            font-size: 14px;
         }
 
-        .btn-voltar:hover {
-            background-color: #555;
+        .assinatura-bloco {
+            margin-bottom: 40px;
+        }
+
+        .assinatura-nome {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .rodape {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.4;
+            border-top: 1px solid #000;
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- ============================
+     CABEÇALHO INSTITUCIONAL
+============================ -->
+<div class="cabecalho">
+    <div>POLÍCIA CIVIL DO ESTADO DO PARÁ</div>
+    <div>DIRETORIA DE RECURSOS HUMANOS</div>
+    <div>COORDENADORIA DE DESENVOLVIMENTO DE PESSOAS</div>
+    <div>DIVISÃO DE DESENVOLVIMENTO E VALORIZAÇÃO DE PESSOAL</div>
+</div>
 
-    <h2>Nota Técnica<br>{{ nota.numero_nota }}</h2>
+<!-- ============================
+     TÍTULO E NUMERAÇÃO
+============================ -->
+<h2>NOTA TÉCNICA Nº {{ nota.numero_nota }}</h2>
 
-    <!-- ============================
-         DADOS DO ESTAGIÁRIO
-    ============================ -->
-    <div class="secao">
-        <h3>Dados do Estagiário</h3>
+<!-- ============================
+     TABELA DE IDENTIFICAÇÃO
+============================ -->
+<table>
+    <tr>
+        <th>Ex-Estagiário(a)</th>
+        <td>{{ est.nome }}</td>
+    </tr>
+    <tr>
+        <th>Ocupação</th>
+        <td>{{ est.ocupacao }}</td>
+    </tr>
+    <tr>
+        <th>Matrícula</th>
+        <td>{{ est.matricula }}</td>
+    </tr>
+    <tr>
+        <th>Processo PAE</th>
+        <td>{{ est.processo_pae }}</td>
+    </tr>
+    <tr>
+        <th>Assunto</th>
+        <td>{{ nota.texto_conclusao.split('.')[0] }}</td>
+    </tr>
+</table>
 
-        <div class="linha"><span class="label">Nome:</span> {{ est.nome }}</div>
-        <div class="linha"><span class="label">Ocupação:</span> {{ est.ocupacao }}</div>
-        <div class="linha"><span class="label">Matrícula:</span> {{ est.matricula }}</div>
-        <div class="linha"><span class="label">Processo PAE:</span> {{ est.processo_pae }}</div>
-        <div class="linha"><span class="label">Contrato:</span> {{ est.data_inicio_contrato }} a {{ est.data_fim_contrato }}</div>
+<!-- ============================
+     OBJETIVO
+============================ -->
+<div class="secao-titulo">1. OBJETIVO</div>
+
+<div class="texto">
+Dar celeridade na análise do pleito no que tange à desburocratização com embasamentos jurídicos que versam sobre o pedido de pagamento em pecúnia referente ao recesso remunerado não gozado, em função do(a) interessado(a) informar não ter recebido essa vantagem em seu contracheque quando estava na ativa. Com escopo em regulamentar os procedimentos dessa natureza no âmbito da Diretoria de Recursos Humanos, para efeito da implementação do pagamento dessa vantagem por meio de folha suplementar, passamos a analisar.
+</div>
+
+<!-- ============================
+     FUNDAMENTAÇÃO LEGAL
+============================ -->
+<div class="secao-titulo">2. FUNDAMENTAÇÃO LEGAL</div>
+
+<div class="texto">
+A presente Nota Técnica está consubstanciada nos seguintes fundamentos legais:
+<br><br>
+2.1 – Lei Federal nº 11.788/2008;<br>
+2.2 – Decreto Estadual nº 1.941/2017, conforme tabela no anexo II;<br>
+2.3 – Manifestação Jurídica nº 1978/2021 – CONJUR/PCPA consoante ao PAE nº 2022/544719;<br>
+2.4 – Parecer Jurídico nº 000156/2022 – PGE consoante ao PAE nº 2022/544719.
+</div>
+
+<!-- ============================
+     INSTRUÇÃO
+============================ -->
+<div class="secao-titulo">3. INSTRUÇÃO</div>
+
+<div class="texto">
+Após pesquisa no Sistema Integrado de Gestão em Recursos Humanos – SIGIRH verificamos as seguintes informações contratuais:
+</div>
+
+<!-- Tabela do período de contrato -->
+<table>
+    <tr>
+        <th rowspan="2">Período de Contrato</th>
+        <th>Data de Início</th>
+        <th>Data de Encerramento</th>
+    </tr>
+    <tr>
+        <td>{{ est.data_inicio_contrato.strftime("%d/%m/%Y") }}</td>
+        <td>{{ est.data_fim_contrato.strftime("%d/%m/%Y") }}</td>
+    </tr>
+</table>
+
+<div class="texto">
+Computando o(s) seguinte(s) período(s) aquisitivo(s) de recesso remunerado:
+</div>
+
+<!-- Tabela dos ciclos -->
+<table>
+    <tr>
+        <th colspan="4">Período Aquisitivo</th>
+        <th rowspan="2">Direito de Gozo</th>
+        <th rowspan="2">Dias Gozados</th>
+        <th rowspan="2">Dias Não Gozados</th>
+    </tr>
+    <tr>
+        <th>Ciclo</th>
+        <th>Data Início</th>
+        <th>Data Fim</th>
+        <th>Contagem</th>
+    </tr>
+
+    {% for c in ciclos %}
+    <tr>
+        <td>{{ loop.index }}º Ciclo</td>
+        <td>{{ c.data_inicio.strftime("%d/%m/%Y") }}</td>
+        <td>{{ c.data_fim.strftime("%d/%m/%Y") }}</td>
+        <td>{{ (c.data_fim - c.data_inicio).days }}</td>
+        <td>{{ c.dias_direito }}</td>
+        <td>{{ c.dias_gozados }}</td>
+        <td>{{ c.dias_direito - c.dias_gozados }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<!-- ============================
+     CONCLUSÃO
+============================ -->
+<div class="secao-titulo">4. CONCLUSÃO</div>
+
+<div class="texto">
+{{ nota.texto_conclusao }}
+</div>
+
+<!-- ============================
+     ASSINATURAS
+============================ -->
+<div class="assinaturas">
+
+    <div class="assinatura-bloco">
+        <div class="assinatura-nome">PAULO GENTIL PANTOJA RAIOL</div>
+        Assistente Administrativo<br>
+        Divisão de Desenvolvimento e Valorização de Pessoas – DDVP/CDP/DRH/PC-PA
     </div>
 
-    <!-- ============================
-         CICLOS
-    ============================ -->
-    <div class="secao">
-        <h3>Períodos Aquisitivos</h3>
-
-        {% for c in ciclos %}
-            <div class="linha">
-                <span class="label">Ciclo:</span>
-                {{ c.data_inicio }} a {{ c.data_fim }}
-            </div>
-            <div class="linha">
-                <span class="label">Direito:</span> {{ c.dias_direito }} dias
-            </div>
-            <div class="linha">
-                <span class="label">Usufruídos:</span> {{ c.dias_gozados }} dias
-            </div>
-            <div class="linha">
-                <span class="label">Não Usufruídos:</span> {{ c.dias_direito - c.dias_gozados }} dias
-            </div>
-            <hr>
-        {% endfor %}
+    <div class="assinatura-bloco">
+        <div class="assinatura-nome">RODRIGO BARBOSA DO NASCIMENTO</div>
+        Coordenador de Desenvolvimento de Pessoas – CDP/DRH/PC-PA<br>
+        Administrador / Especialista em Gestão Pública
     </div>
 
-    <!-- ============================
-         CONCLUSÃO
-    ============================ -->
-    <div class="secao conclusao">
-        <h3>Conclusão</h3>
-        <p>{{ nota.texto_conclusao }}</p>
-    </div>
+</div>
 
-    <button class="btn-voltar" onclick="window.location.href='/notas-tecnicas'">
-        Voltar à Lista de Notas Técnicas
-    </button>
-
+<!-- ============================
+     RODAPÉ
+============================ -->
+<div class="rodape">
+Endereço: Av. Governador Magalhães Barata, 209 – Nazaré – CEP: 66.040.170 – Belém – Pará – Brasil<br>
+Telefone: 4006-9006 – Site: www.policiacivil.pa.gov.br – E-mail: drhfpag@policiacivil.pa.gov.br
 </div>
 
 </body>
