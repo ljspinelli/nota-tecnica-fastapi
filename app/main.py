@@ -242,7 +242,4 @@ def gerar_nota(
         ocupacao=ocupacao,
         matricula=matricula,
         processo_pae=processo_pae,
-        data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").date(),
-        data_fim_contrato=datetime.strptime(fim, "%Y-%m-%d").date(),
-    )
-    db.add
+        data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").
