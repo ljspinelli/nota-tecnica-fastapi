@@ -102,19 +102,19 @@ def form_nota(request: Request):
 def calcular_direito(dias: int) -> int:
     if dias < 180:
         return 0
-    elif 180 <= dias <= 209:
+    elif 180 <= dias < 209:
         return 15
-    elif 210 <= dias <= 239:
+    elif 210 <= dias < 239:
         return 18
-    elif 240 <= dias <= 269:
+    elif 240 <= dias < 269:
         return 20
-    elif 270 <= dias <= 299:
+    elif 270 <= dias < 299:
         return 23
-    elif 300 <= dias <= 329:
+    elif 300 <= dias < 329:
         return 25
-    elif 330 <= dias <= 359:
+    elif 330 <= dias < 359:
         return 28
-    elif 360 <= dias <= 366:
+    elif 360 <= dias < 367:
         return 30
     else:
         return 0
