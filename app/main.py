@@ -102,22 +102,24 @@ def form_nota(request: Request):
 def calcular_direito(dias: int) -> int:
     if dias < 180:
         return 0
-    elif 180 <= dias > 210:
+    elif 180 <= dias <= 209:
         return 15
-    elif 210 <= dias < 240:
+    elif 210 <= dias <= 239:
         return 18
-    elif 240 <= dias < 270:
+    elif 240 <= dias <= 269:
         return 20
-    elif 270 <= dias < 300:
+    elif 270 <= dias <= 299:
         return 23
-    elif 300 <= dias < 330:
+    elif 300 <= dias <= 329:
         return 25
-    elif 330 <= dias < 360:
+    elif 330 <= dias <= 359:
         return 28
-    elif 360 <= dias < 367:
+    elif 360 <= dias <= 366:
         return 30
     else:
         return 0
+
+
 
 
 def processar_dados_formulario(form):
@@ -245,6 +247,7 @@ def gerar_nota(
     data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").date(),
     data_fim_contrato=datetime.strptime(fim, "%Y-%m-%d").date()
 )
+
 
 
 
