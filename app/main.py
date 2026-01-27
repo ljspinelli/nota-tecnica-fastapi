@@ -114,7 +114,7 @@ def calcular_direito(dias):
         return 25
     if dias <= 330:
         return 28
-    if dias <= 366:
+    if dias <= 360:
         return 30
     return 0
 
@@ -346,3 +346,4 @@ def visualizar_nota(nota_id: int, request: Request, db: Session = Depends(get_db
             "ciclos": ciclos
         }
     )
+
