@@ -243,3 +243,5 @@ def gerar_nota(
         matricula=matricula,
         processo_pae=processo_pae,
         data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").
+    )
+
