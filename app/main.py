@@ -238,10 +238,12 @@ def gerar_nota(
     # 1. Criar Estagiário
     # ============================================================
     est = Estagiario(
-        nome=nome,
-        ocupacao=ocupacao,
-        matricula=matricula,
-        processo_pae=processo_pae,
-        data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").
-    )
+    nome=nome,
+    ocupacao=ocupacao,
+    matricula=matricula,
+    processo_pae=processo_pae,
+    data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").date(),
+    data_fim_contrato=datetime.strptime(fim, "%Y-%m-%d").date()
+)
+
 
