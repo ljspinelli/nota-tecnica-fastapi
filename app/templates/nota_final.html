@@ -194,7 +194,7 @@ Computando o(s) seguinte(s) período(s) aquisitivo(s) de recesso remunerado:
         <td>{{ loop.index }}º Ciclo</td>
         <td>{{ c.data_inicio.strftime("%d/%m/%Y") }}</td>
         <td>{{ c.data_fim.strftime("%d/%m/%Y") }}</td>
-        <td>{{ (c.data_fim - c.data_inicio).days }}</td>
+        <td>{{ c.dias_corridos }}</td> <!-- ✅ corrigido -->
         <td>{{ c.dias_direito }}</td>
         <td>{{ c.dias_gozados }}</td>
         <td>{{ c.dias_direito - c.dias_gozados }}</td>
@@ -231,8 +231,6 @@ Computando o(s) seguinte(s) período(s) aquisitivo(s) de recesso remunerado:
     </div>
 
 </div>
-
-
 
 <!-- ============================
      RODAPÉ
