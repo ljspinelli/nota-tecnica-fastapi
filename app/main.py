@@ -147,11 +147,7 @@ def processar_dados_formulario(form):
     # CÁLCULO DOS CICLOS
     # ============================================================
 
-    # ============================================================
-# CÁLCULO DOS CICLOS
-# ============================================================
-
-ciclo1_inicio = inicio
+   ciclo1_inicio = inicio
 if dias_contrato < 364:
     ciclo1_fim = fim
     ciclo2_inicio = None
@@ -191,9 +187,7 @@ else:
         max(dados["ciclo2_direito"] - dados["ciclo2_gozados"], 0)
         if dados["ciclo2_direito"] != "" else ""
     )
-
-    return dados
-
+   
 # ============================================================
 # ROTA DE PRÉVIA DA NOTA TÉCNICA
 # ============================================================
@@ -251,6 +245,7 @@ def gerar_nota(
     data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").date(),
     data_fim_contrato=datetime.strptime(fim, "%Y-%m-%d").date()
 )
+
 
 
 
