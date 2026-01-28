@@ -32,6 +32,7 @@ class Ciclo(Base):
 
     data_inicio = Column(Date, nullable=False)
     data_fim = Column(Date, nullable=False)
+    dias_corridos = Column(Integer, nullable=False)   # ✅ novo campo para armazenar a contagem de dias
     dias_gozados = Column(Integer, nullable=False)
     dias_direito = Column(Integer, nullable=False)
 
