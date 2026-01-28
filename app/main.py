@@ -137,7 +137,7 @@ def processar_dados_formulario(form):
     dados["inicio"] = form["inicio"]
     dados["fim"] = form["fim"]
 
-    # Dias de contrato
+    # Dias de contrato (inclui o dia final)
     dias_contrato = (fim - inicio).days + 1
     dados["dias_contrato"] = dias_contrato
 
@@ -157,13 +157,13 @@ def processar_dados_formulario(form):
 
     dados["ciclo1_inicio"] = ciclo1_inicio.strftime("%Y-%m-%d")
     dados["ciclo1_fim"] = ciclo1_fim.strftime("%Y-%m-%d")
-    dados["ciclo1_dias"] = (ciclo1_fim - ciclo1_inicio).days + 1
+    dados["ciclo1_dias"] = (ciclo1_fim - ciclo1_inicio).days  # ✅ sem +1
     dados["ciclo1_direito"] = calcular_direito(dados["ciclo1_dias"])
 
     if ciclo2_inicio:
         dados["ciclo2_inicio"] = ciclo2_inicio.strftime("%Y-%m-%d")
         dados["ciclo2_fim"] = ciclo2_fim.strftime("%Y-%m-%d")
-        dados["ciclo2_dias"] = (ciclo2_fim - ciclo2_inicio).days + 1
+        dados["ciclo2_dias"] = (ciclo2_fim - ciclo2_inicio).days  # ✅ sem +1
         dados["ciclo2_direito"] = calcular_direito(dados["ciclo2_dias"])
     else:
         dados["ciclo2_inicio"] = ""
@@ -234,6 +234,7 @@ def gerar_nota(
 
     db: Session = Depends(get_db)
 ):
+
     # ============================================================
     # 1. Criar Estagiário
     # ============================================================
@@ -245,3 +246,4 @@ def gerar_nota(
     data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").date(),
     data_fim_contrato=datetime.strptime(fim, "%Y-%m-%d").date()
 )
+
