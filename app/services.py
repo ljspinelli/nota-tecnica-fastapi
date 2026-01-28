@@ -71,21 +71,22 @@ def calcular_dias_direito(dias_corridos: int) -> int:
     """Tabela oficial de dias de recesso por dias corridos."""
     if dias_corridos < 180:
         return 0
-    elif dias_corridos == 180:
+    elif 180 <= dias_corridos <= 209:
         return 15
-    elif dias_corridos <= 210:
+    elif 210 <= dias_corridos <= 239:
         return 18
-    elif dias_corridos <= 240:
+    elif 240 <= dias_corridos <= 269:
         return 20
-    elif dias_corridos <= 270:
+    elif 270 <= dias_corridos <= 299:
         return 23
-    elif dias_corridos <= 300:
+    elif 300 <= dias_corridos <= 329:
         return 25
-    elif dias_corridos <= 330:
+    elif 330 <= dias_corridos <= 359:
         return 28
-    elif dias_corridos <= 366:
+    elif 360 <= dias_corridos <= 366:
         return 30
-    return 0
+    else:
+        return 0
 
 def montar_ciclos_a_partir_form(contrato_inicio_str: str, contrato_fim_str: str):
     """Divide o contrato em 1 ou 2 ciclos conforme a regra dos 365 dias."""
