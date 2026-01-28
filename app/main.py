@@ -147,32 +147,36 @@ def processar_dados_formulario(form):
     # CÁLCULO DOS CICLOS
     # ============================================================
 
-    ciclo1_inicio = inicio
-    if dias_contrato < 364:
-        ciclo1_fim = fim
-        ciclo2_inicio = None
-        ciclo2_fim = None
-    else:
-        ciclo1_fim = inicio + timedelta(days=364)
-        ciclo2_inicio = ciclo1_fim + timedelta(days=1)
-        ciclo2_fim = fim
+    # ============================================================
+# CÁLCULO DOS CICLOS
+# ============================================================
 
-    dados["ciclo1_inicio"] = ciclo1_inicio.strftime("%Y-%m-%d")
-    dados["ciclo1_fim"] = ciclo1_fim.strftime("%Y-%m-%d")
-    dados["ciclo1_dias"] = (ciclo1_fim - ciclo1_inicio).days
-    dados["ciclo1_direito"] = calcular_direito(dados["ciclo1_dias"])
+ciclo1_inicio = inicio
+if dias_contrato < 364:
+    ciclo1_fim = fim
+    ciclo2_inicio = None
+    ciclo2_fim = None
+else:
+    ciclo1_fim = inicio + timedelta(days=364)
+    ciclo2_inicio = ciclo1_fim + timedelta(days=1)
+    ciclo2_fim = fim
 
-    if ciclo2_inicio:
-        dados["ciclo2_inicio"] = ciclo2_inicio.strftime("%Y-%m-%d")
-        dados["ciclo2_fim"] = ciclo2_fim.strftime("%Y-%m-%d")
-        dados["ciclo2_dias"] = (ciclo2_fim - ciclo2_inicio).days
-        dados["ciclo2_direito"] = calcular_direito(dados["ciclo2_dias"])
-    else:
-        dados["ciclo2_inicio"] = ""
-        dados["ciclo2_fim"] = ""
-        dados["ciclo2_dias"] = ""
-        dados["ciclo2_direito"] = ""
+# ✅ Ajuste: incluir o dia final (+1)
+dados["ciclo1_inicio"] = ciclo1_inicio.strftime("%Y-%m-%d")
+dados["ciclo1_fim"] = ciclo1_fim.strftime("%Y-%m-%d")
+dados["ciclo1_dias"] = (ciclo1_fim - ciclo1_inicio).days + 1
+dados["ciclo1_direito"] = calcular_direito(dados["ciclo1_dias"])
 
+if ciclo2_inicio:
+    dados["ciclo2_inicio"] = ciclo2_inicio.strftime("%Y-%m-%d")
+    dados["ciclo2_fim"] = ciclo2_fim.strftime("%Y-%m-%d")
+    dados["ciclo2_dias"] = (ciclo2_fim - ciclo2_inicio).days + 1
+    dados["ciclo2_direito"] = calcular_direito(dados["ciclo2_dias"])
+else:
+    dados["ciclo2_inicio"] = ""
+    dados["ciclo2_fim"] = ""
+    dados["ciclo2_dias"] = ""
+    dados["ciclo2_direito"] = ""
     # ============================================================
     # GOZO
     # ============================================================
@@ -247,6 +251,7 @@ def gerar_nota(
     data_inicio_contrato=datetime.strptime(inicio, "%Y-%m-%d").date(),
     data_fim_contrato=datetime.strptime(fim, "%Y-%m-%d").date()
 )
+
 
 
 
