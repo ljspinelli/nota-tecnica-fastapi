@@ -20,23 +20,6 @@ class Estagiario(Base):
     ciclos = relationship("Ciclo", back_populates="estagiario", cascade="all, delete-orphan")
     notas = relationship("NotaTecnica", back_populates="estagiario", cascade="all, delete-orphan")
 
-# ============================================================
-# MODELO: CICLO DE RECESSO
-# ============================================================
-
-class Ciclo(Base):
-    __tablename__ = "ciclos"
-
-    id = Column(Integer, primary_key=True, index=True)
-    estagiario_id = Column(Integer, ForeignKey("estagiarios.id"), nullable=False)
-
-    data_inicio = Column(Date, nullable=False)
-    data_fim = Column(Date, nullable=False)
-    dias_corridos = Column(Integer, nullable=False)   # ✅ novo campo para armazenar a contagem de dias
-    dias_gozados = Column(Integer, nullable=False)
-    dias_direito = Column(Integer, nullable=False)
-
-    estagiario = relationship("Estagiario", back_populates="ciclos")
 
 # ============================================================
 # MODELO: NOTA TÉCNICA
@@ -48,9 +31,35 @@ class NotaTecnica(Base):
     id = Column(Integer, primary_key=True, index=True)
     estagiario_id = Column(Integer, ForeignKey("estagiarios.id"), nullable=False)
 
-    numero_sequencial = Column(Integer, autoincrement=True)
+    # Agora funciona corretamente no PostgreSQL
+    numero_sequencial = Column(Integer, nullable=False)
+
     total_dias_nao_gozados = Column(Integer, nullable=False)
     texto_conclusao = Column(String, nullable=False)
     data_emissao = Column(Date, nullable=False)
 
     estagiario = relationship("Estagiario", back_populates="notas")
+    ciclos = relationship("Ciclo", back_populates="nota", cascade="all, delete-orphan")
+
+
+# ============================================================
+# MODELO: CICLO DE RECESSO
+# ============================================================
+
+class Ciclo(Base):
+    __tablename__ = "ciclos"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    estagiario_id = Column(Integer, ForeignKey("estagiarios.id"), nullable=False)
+    nota_id = Column(Integer, ForeignKey("notas_tecnicas.id"), nullable=False)
+
+    data_inicio = Column(Date, nullable=False)
+    data_fim = Column(Date, nullable=False)
+
+    dias_corridos = Column(Integer, nullable=False)
+    dias_gozados = Column(Integer, nullable=False)
+    dias_direito = Column(Integer, nullable=False)
+
+    estagiario = relationship("Estagiario", back_populates="ciclos")
+    nota = relationship("NotaTecnica", back_populates="ciclos")
